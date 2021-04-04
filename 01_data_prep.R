@@ -41,6 +41,7 @@ f1_dat <- tibble(
 for (yr in start_year:end_year) {
   yr_dat <- get_season_table(yr)
   for (rnd in yr_dat$round) {
+    cat(glue("Downloading race {rnd} of season {yr}..."))
     rnd_dat <- get_result_table(yr, rnd)
     dat <- tibble(
       driver      = rnd_dat$Driver$driverId,
@@ -52,6 +53,7 @@ for (yr in start_year:end_year) {
       round       = as.integer(rnd)
     )
     f1_dat <- bind_rows(f1_dat, dat)
+    cat(" Done.\n")
   }
 }
 
