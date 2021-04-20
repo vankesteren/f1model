@@ -2,15 +2,30 @@ library(tidyverse)
 library(firatheme)
 f1_dat <- read_rds("dat/f1_dat.rds")
 
+# convert to factors
 f1_dat <- f1_dat %>% mutate(
-  status = as_factor(status),
-  constructor = as_factor(constructor),
-  driver = as_factor(driver)
+  status       = as_factor(status),
+  constructor  = as_factor(constructor),
+  driver       = as_factor(driver),
+  weather_type = as_factor(weather_type),
+  circuit_type = as_factor(circuit_type)
 )
 
-# exclude all collisions & non-finishes
-#f1_dat_finished <- f1_dat %>% filter(status == "Finished" | str_starts(status, "\\+"))
+# dataset with proportion outcome ----
+f1_dat_processed <-
+  f1_dat %>%
+  group_by(year, round) %>%
+  mutate(
+    position_prop = (n() - position) / (n() - 1),        # how many classified drivers did you beat?
+    prop_trans = (position_prop * (n() - 1) + 0.5) / n() # https://stats.stackexchange.com/a/134297/116878
+  ) %>%
+  ungroup()
 
+write_rds(f1_dat_processed, "dat/f1_dat_processed.rds")
+
+
+# another dataset, but now excluding all collisions & non-finishes ----
+# exclude all collisions & non-finishes
 compute_classified <- function(status) {
   out <- rep("not classified", length(status))
   # anyone above the last person still running (finished or +n laps is classified)
@@ -30,8 +45,7 @@ f1_dat_finished <-
     prop_trans = (position_prop * (n() - 1) + 0.5) / n() # https://stats.stackexchange.com/a/134297/116878
   ) %>%
   ungroup() %>%
-  select(-classified) %>%
-  mutate(year_from_start = year - min(year))
+  select(-classified)
 
 write_rds(f1_dat_finished, "dat/f1_dat_finished.rds")
 
@@ -50,7 +64,8 @@ ggplot(f1_dat_finished, aes(x = factor(position))) +
 ggsave("img/eda_finish_position.png", width = 9, height = 6)
 
 # basic plot
-f1_dat_finished %>% filter(driver %in% c("hamilton", "raikkonen", "giovinazzi")) %>%
+f1_dat_finished %>%
+  filter(driver %in% c("hamilton", "raikkonen", "giovinazzi")) %>%
   ggplot(aes(x = factor(position), fill = driver)) +
   geom_bar(position = position_dodge(preserve = "single")) +
   theme_fira() +
@@ -67,7 +82,8 @@ f1_dat_finished %>% filter(driver %in% c("hamilton", "raikkonen", "giovinazzi"))
 
 ggsave("img/eda_finish_drivers.png", width = 12, height = 9)
 
-f1_dat_finished %>% filter(driver %in% c("hamilton", "raikkonen", "giovinazzi")) %>%
+f1_dat_finished %>%
+  filter(driver %in% c("hamilton", "raikkonen", "giovinazzi")) %>%
   ggplot(aes(x = prop_trans, fill = driver)) +
   geom_density(alpha = 0.5, bw = 0.1) +
   theme_fira() +
