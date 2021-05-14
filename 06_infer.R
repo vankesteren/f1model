@@ -74,6 +74,9 @@ ggsave("img/driver_wet.png", width = 9, height = 9)
 
 
 # Plot for constructor advantage ----
+constructors_2021 <- c("alfa", "alphatauri", "renault", "ferrari", "haas", "mclaren", "mercedes", "red_bull",
+                       "williams")
+
 constructor_means <- posterior_samples(fit, "r_constructor\\[.+\\,Intercept\\]")
 colnames(constructor_means) <- str_extract(colnames(constructor_means), "(?<=\\[).+(?=\\,Intercept])")
 constructor_means_samples <-
@@ -95,6 +98,7 @@ constructor_means_summary <-
 
 plt_constructor <-
   constructor_means_summary %>%
+  filter(constructor %in% constructors_2021) %>%
   arrange(est) %>%
   mutate(constructor = as_factor(constructor)) %>%
   ggplot(aes(y = constructor)) +
@@ -105,7 +109,7 @@ plt_constructor <-
 
 plt_constructor
 
-ggsave("img/constructor.png", width = 9, height = 9)
+ggsave("img/constructor.png", width = 9, height = 7)
 
 # Plot for constructor form per year
 constructoryear_pars <- posterior_samples(fit, "r_constructor:year")
