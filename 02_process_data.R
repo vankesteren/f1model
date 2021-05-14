@@ -83,19 +83,19 @@ f1_dat_finished %>%
 ggsave("img/eda_finish_drivers.png", width = 12, height = 9)
 
 f1_dat_finished %>%
-  filter(driver %in% c("hamilton", "raikkonen", "giovinazzi")) %>%
+  filter(driver %in% c("hamilton", "raikkonen", "giovinazzi"), year != 2014) %>%
   ggplot(aes(x = prop_trans, fill = driver)) +
   geom_density(alpha = 0.5, bw = 0.1) +
   theme_fira() +
   scale_fill_fira() +
   labs(
     x = "Smoothed proportion of drivers beaten",
-    y = "Count",
+    y = "Density",
     title = "Different drivers' results",
     subtitle = "Proportion of finished drivers beaten",
     fill = ""
   ) +
-  theme(legend.position = "top") +
+  theme(legend.position = "top", axis.text.x = element_text(angle = 45, vjust = 0.85)) +
   facet_wrap(~year)
 
-ggsave("img/eda_finish_drivers_prop.png", width = 12, height = 9)
+ggsave("img/eda_finish_drivers_prop.png", width = 9, height = 6)

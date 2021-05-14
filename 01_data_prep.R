@@ -45,7 +45,7 @@ for (yr in start_year:end_year) {
   yr_dat <- get_season_table(yr)
   for (rnd in yr_dat$round) {
     cat(glue("Downloading season {yr} round {rnd}..."),"\n")
-    Sys.sleep(runif(1)*.2)
+    Sys.sleep(runif(1)*.2) # to avoid too many calls per second
     rnd_dat <- get_result_table(yr, rnd)
     dat <- tibble(
       driver      = rnd_dat$Driver$driverId,
@@ -144,6 +144,39 @@ circuit_dat <-
   )
 
 write_rds(circuit_dat, "dat/circuit_dat.rds")
+
+
+# Manual addition ----
+# a few races did not parse on wikipedia, I manually add that data here
+circuit_dat[circuit_dat$circuit == "hockenheimring", "circuit_type"] <- "permanent"
+weather_missing_idx <- which(is.na(circuit_dat$weather_type))
+
+circuit_dat[weather_missing_idx, "weather_type"] <- c(
+  "dry", # germany 2014
+  "wet", # shanghai 2017
+  "dry", # bahrain 2017
+  "dry", # sochi 2017
+  "dry", # spain 2017
+  "dry", # monaco 2017
+  "dry", # brazil 2017
+  "dry", # bahrain 2018
+  "dry", # shanghai 2018
+  "dry", # monaco 2018
+  "dry", # hungary 2018
+  "dry", # belgium 2018
+  "dry", # italy 2018
+  "dry", # singapore 2018
+  "dry", # russia 2018
+  "dry", # japan 2018
+  "dry", # usa 2018
+  "dry", # mexico 2018
+  "dry", # brazil 2018
+  "dry", # abu dhabi 2018
+  "dry", # australia 2019
+  "dry", # china 2019
+  "dry", # azerbaijan 2019
+  "dry"  # spain 2019
+)
 
 # Combine everything ----
 f1_dat <- left_join(
