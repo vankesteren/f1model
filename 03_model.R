@@ -3,6 +3,7 @@ library(brms)
 f1_dat_processed <- read_rds("dat/f1_dat_processed.rds")
 f1_dat_finished  <- read_rds("dat/f1_dat_finished.rds")
 
+
 fit <- brm(
   formula = prop_trans ~ 0 + (1 | driver) + (1 | constructor) + (1 | constructor:year),
   family  = Beta(),

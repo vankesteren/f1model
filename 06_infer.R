@@ -74,8 +74,8 @@ ggsave("img/driver_wet.png", width = 9, height = 9)
 
 
 # Plot for constructor advantage ----
-constructors_2021 <- c("alfa", "alphatauri", "renault", "ferrari", "haas", "mclaren", "mercedes", "red_bull",
-                       "williams")
+constructors_2021 <- c("alfa", "alphatauri", "renault", "ferrari", "haas", "mclaren", "mercedes", "racing_point",
+                       "red_bull", "williams")
 
 constructor_means <- posterior_samples(fit, "r_constructor\\[.+\\,Intercept\\]")
 colnames(constructor_means) <- str_extract(colnames(constructor_means), "(?<=\\[).+(?=\\,Intercept])")
@@ -161,18 +161,39 @@ constructor_progress(c("ferrari", "mclaren", "mercedes", "red_bull")) +
 
 ggsave("img/constructor_form.png", width = 9, height = 6)
 
-# Driver versus constructor contributions ----
-sd_samples <- posterior_samples(fit, "sd_(driver|constructor)__(Intercept|weather_typewet)")
 
-ggplot(sd_samples, aes(x = sd_constructor__Intercept^2 - (sd_driver__Intercept^2 + sd_driver__weather_typewet^2))) +
-  geom_density(fill = firaCols[4]) +
+# Driver versus constructor contributions ----
+sd_samples <- posterior_samples(fit, "(sd|cor)_(driver|constructor)__(Intercept|weather_typewet)")
+sd_samples <-
+  sd_samples %>%
+  mutate(
+    sd_driver_dry  = sd_driver__Intercept,
+    # use standard formula for variance of correlated random variables to get std.dev of drivers in wet
+    sd_driver_wet  = sqrt(sd_driver_dry^2 + sd_driver__weather_typewet^2 +
+                          2*cor_driver__Intercept__weather_typewet*sd_driver_dry*sd_driver__weather_typewet),
+    sd_constructor = sd_constructor__Intercept
+  ) %>%
+  select(!contains("__")) %>%
+  pivot_longer(everything(), names_to = "Component", values_to = "SD", names_prefix = "sd_")
+
+
+ggplot(sd_samples, aes(x = SD, fill = Component)) +
+  geom_density(alpha = 0.8) +
   geom_vline(xintercept = 0) +
   theme_fira() +
-  xlim(-4, 4) +
+  scale_fill_fira() +
+  xlim(0, 2.5) +
   labs(title = "Constructor contribution is larger than driver contributions",
        subtitle = "Based on constructor and driver random effect variance",
        y = "Posterior density",
-       x = "Constructor effect variance - driver effect variance")
+       x = "Random effect standard deviation",
+       fill = "RE component")
 
 
 ggsave("img/variance.png", width = 9, height = 5)
+
+
+# random effects standard deviation summary
+sfit <- summary(fit, prob = 0.89, )
+ranef_summary <- rbind(sfit$random$constructor, sfit$random$`constructor:year`, sfit$random$driver)[1:5, 1:4]
+xtable::xtable(ranef_summary)
