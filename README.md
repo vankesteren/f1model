@@ -1,6 +1,6 @@
-# Disentangling drivers & constructors in the F1 hybrid era
+# Bayesian Analysis of Formula One Race Results
 
-Repository containing code & presentation accompanying the manuscript _Bayesian Analysis of Formula One Race Results_. The scripts contain the following:
+Repository containing code, data & presentation accompanying the manuscript _Bayesian Analysis of Formula One Race Results_. The scripts contain the following:
 
 | Script                                     | Contents                                                         |
 | :----------------------------------------- | :--------------------------------------------------------------- |
@@ -12,6 +12,15 @@ Repository containing code & presentation accompanying the manuscript _Bayesian 
 | [`06_infer.R`](./06_infer.R)               | Inferences using posteriors of parameters                        |
 | [`07_predict.R`](./07_predict.R)           | Counterfactual predictions                                       |
 
-Picture sources are in the presentation notes.
+Data [`f1db_csv`](dat/f1db_csv) obtained from [Ergast developer API](http://ergast.com/mrd/db/) on 2021-05-16 uploaded with permission. All data objects (`.rds` and `.csv` files) are [CC BY 4.0](http://creativecommons.org/licenses/by/4.0/) licensed. Code is [MIT](LICENSE) licensed.
 
-Disclaimer: these ratings are the result of a statistical model and its accompanying simplifying assumptions, estimated using only position data from 2014-2020. Please do not take the ratings as absolute truth.
+> Disclaimer: the ratings shown below are the result of a statistical model and its accompanying simplifying assumptions, estimated using only position data from 2014-2020. Please do not take the ratings as absolute truth.
+
+![driver talent plot](img/driver_wet.png)
+
+![constructor advantage plot](img/constructor.png)
+
+![constructor form plot](img/constructor_form.png)
+
+NB: Presentation picture sources are in the notes.
+
