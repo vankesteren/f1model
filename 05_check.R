@@ -1,4 +1,6 @@
-# posterior predictive check
+# Code accompanying the manuscript "Bayesian Analysis of Formula One Race Results"
+# Last edited 2021-05-16 by @vankesteren
+# Contents: MCMC validation, posterior predictive checks
 library(tidyverse)
 library(brms)
 library(firatheme)
@@ -6,10 +8,13 @@ library(firatheme)
 f1_dat <- read_rds("dat/f1_dat_finished.rds")
 fit <- read_rds("dat/fit_weather.rds")
 
-# mcmc mixing ----
+# MCMC mixing ----
 png("img/chains.png", width = 2700, height = 2000, res = 300)
 chains <- plot(fit, N = 6)
 dev.off()
+
+# Rhat ----
+rhat(fit)
 
 # 2019 posterior predictive check ----
 # create drivers & constructors in 2019

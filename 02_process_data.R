@@ -1,7 +1,11 @@
+# Code accompanying the manuscript "Bayesian Analysis of Formula One Race Results"
+# Last edited 2021-05-16 by @vankesteren
+# Contents: data processing, status filtering, outcome computation, some EDA
 library(tidyverse)
 library(firatheme)
 f1_dat <- read_rds("dat/f1_dat.rds")
 
+# Data processing ----
 # convert to factors
 f1_dat <- f1_dat %>% mutate(
   status       = as_factor(status),
@@ -11,20 +15,6 @@ f1_dat <- f1_dat %>% mutate(
   circuit_type = as_factor(circuit_type)
 )
 
-# dataset with proportion outcome ----
-f1_dat_processed <-
-  f1_dat %>%
-  group_by(year, round) %>%
-  mutate(
-    position_prop = (n() - position) / (n() - 1),        # how many classified drivers did you beat?
-    prop_trans = (position_prop * (n() - 1) + 0.5) / n() # https://stats.stackexchange.com/a/134297/116878
-  ) %>%
-  ungroup()
-
-write_rds(f1_dat_processed, "dat/f1_dat_processed.rds")
-
-
-# another dataset, but now excluding all collisions & non-finishes ----
 # exclude all collisions & non-finishes
 compute_classified <- function(status) {
   out <- rep("not classified", length(status))

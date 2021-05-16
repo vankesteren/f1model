@@ -1,10 +1,11 @@
-#predict
+# Code accompanying the manuscript "Bayesian Analysis of Formula One Race Results"
+# Last edited 2021-05-16 by @vankesteren
+# Contents: Counterfactual predictions
 library(tidyverse)
 library(firatheme)
 library(brms)
 
 fit <- read_rds("dat/fit_weather.rds")
-
 
 # in a wet race in 2020, how likely is it that raikkonen in a mercedes beats lewis in an alfa?
 raikkonen_mercedes <- posterior_predict(fit, tibble(

@@ -1,7 +1,8 @@
+# Code accompanying the manuscript "Bayesian Analysis of Formula One Race Results"
+# Last edited 2021-05-16 by @vankesteren
+# Contents: Inferences using posteriors of parameters
 library(tidyverse)
 library(brms)
-library(glue)
-library(ggridges)
 library(firatheme)
 library(patchwork)
 
