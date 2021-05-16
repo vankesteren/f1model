@@ -14,7 +14,8 @@ chains <- plot(fit, N = 6)
 dev.off()
 
 # Rhat ----
-rhat(fit)
+rhats <- rhat(fit)
+any(rhats[!is.nan(rhats)] > 1.01)
 
 # 2019 posterior predictive check ----
 # create drivers & constructors in 2019

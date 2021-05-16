@@ -114,5 +114,7 @@ f1_dat <-
   select(-raceId) %>%
   rename(circuit = circuitRef, driver = driverRef, constructor = constructorRef,
          position = positionOrder, fastest_lab = fastestLapTime) %>%
-  select(driver, constructor, year, circuit, position, weather_type, circuit_type, status) %>%
-  mutate(year = as.integer(year), position = as.integer(position))
+  select(driver, constructor, year, round, circuit, position, weather_type, circuit_type, status) %>%
+  mutate(year = as.integer(year), round = as.integer(round), position = as.integer(position))
+
+write_rds(f1_dat, "dat/f1_dat.rds")
