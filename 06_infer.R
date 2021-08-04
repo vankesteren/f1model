@@ -8,7 +8,7 @@ library(patchwork)
 
 fit <- read_rds("dat/fit_weather.rds")
 
-# Inference about driver talent ----
+# Inference about driver skill ----
 drivers_2021 <- c("hamilton", "bottas", "ricciardo", "norris", "sainz", "leclerc", "russell", "latifi",
                   "max_verstappen", "perez", "mick_schumacher", "mazepin", "ocon", "alonso", "raikkonen",
                   "giovinazzi", "vettel", "stroll", "tsunoda", "gasly")
@@ -17,57 +17,57 @@ driver_pars <- posterior_samples(fit, pars = "r_driver\\[.+Intercept")
 wet_pars    <- posterior_samples(fit, pars = "r_driver\\[.+weather_typewet")
 colnames(driver_pars) <- colnames(wet_pars) <- str_extract(colnames(driver_pars), "(?<=\\[).+(?=\\,Intercept])")
 
-driver_talent_samples <-
+driver_skill_samples <-
   as_tibble(driver_pars) %>%
-  pivot_longer(everything(), names_to = "Driver", values_to = "Talent")
+  pivot_longer(everything(), names_to = "Driver", values_to = "Skill")
 
-wet_talent_samples <-
+wet_skill_samples <-
   as_tibble(wet_pars + driver_pars) %>%
-  pivot_longer(everything(), names_to = "Driver", values_to = "Talent")
+  pivot_longer(everything(), names_to = "Driver", values_to = "Skill")
 
-driver_talent_summary <-
-  driver_talent_samples %>%
+driver_skill_summary <-
+  driver_skill_samples %>%
   group_by(Driver) %>%
   summarise(
-    est = mean(Talent),
-    lower = quantile(Talent, 0.055),
-    upper = quantile(Talent, 0.945),
+    est = mean(Skill),
+    lower = quantile(Skill, 0.055),
+    upper = quantile(Skill, 0.945),
   ) %>%
   arrange(-est)
 
-wet_talent_summary <-
-  wet_talent_samples %>%
+wet_skill_summary <-
+  wet_skill_samples %>%
   group_by(Driver) %>%
   summarise(
-    est = mean(Talent),
-    lower = quantile(Talent, 0.055),
-    upper = quantile(Talent, 0.945),
+    est = mean(Skill),
+    lower = quantile(Skill, 0.055),
+    upper = quantile(Skill, 0.945),
   ) %>%
   arrange(-est)
 
 plt_driver <-
-  driver_talent_summary %>%
+  driver_skill_summary %>%
   filter(Driver %in% drivers_2021) %>%
   arrange(est) %>%
   mutate(Driver = as_factor(Driver)) %>%
   ggplot(aes(y = Driver)) +
   geom_pointrange(aes(x = est, xmin = lower, xmax = upper), colour = firaCols[3]) +
   theme_fira() +
-  labs(x = "Talent (log odds ratio)", title = "F1 driver talent",
-       subtitle = "Average hybrid-era (2014-2020) driver talent,\naccounting for yearly constructor advantage.")
+  labs(x = "Skill (log odds ratio)", title = "F1 driver skill",
+       subtitle = "Average hybrid-era (2014-2020) driver skill,\naccounting for yearly constructor advantage.")
 
 plt_driver_wet <-
   bind_rows(
-    driver_talent_summary %>% filter(Driver %in% drivers_2021) %>% arrange(est) %>% mutate(weather_type = "Dry race"),
-    wet_talent_summary %>% filter(Driver %in% drivers_2021) %>% mutate(weather_type = "Wet race")
+    driver_skill_summary %>% filter(Driver %in% drivers_2021) %>% arrange(est) %>% mutate(weather_type = "Dry race"),
+    wet_skill_summary %>% filter(Driver %in% drivers_2021) %>% mutate(weather_type = "Wet race")
   ) %>%
   mutate(Driver = as_factor(Driver)) %>%
   ggplot(aes(y = Driver, colour = weather_type)) +
   geom_pointrange(aes(x = est, xmin = lower, xmax = upper), position = position_dodge(width = -.6)) +
   theme_fira() +
   scale_colour_manual(values = c(firaCols[3], firaCols[1])) +
-  labs(x = "Talent (log odds ratio)", title = "F1 driver talent",
-       subtitle = "Average hybrid-era (2014-2020) driver talent,\naccounting for yearly constructor advantage.",
+  labs(x = "Skill (log odds ratio)", title = "F1 driver skill",
+       subtitle = "Average hybrid-era (2014-2020) driver skill,\naccounting for yearly constructor advantage.",
        colour = "") +
   theme(legend.position = "top")
 
@@ -106,7 +106,7 @@ plt_constructor <-
   geom_pointrange(aes(x = est, xmin = lower, xmax = upper), colour = firaCols[2]) +
   theme_fira() +
   labs(x = "Advantage (log odds ratio)", y = "Constructor", title = "F1 constructor advantage",
-       subtitle = "Average hybrid-era (2014-2020) constructor advantage, \naccounting for driver talent & constructor form.")
+       subtitle = "Average hybrid-era (2014-2020) constructor advantage, \naccounting for driver skill & constructor form.")
 
 plt_constructor
 

@@ -1,5 +1,5 @@
 # Code accompanying the manuscript "Bayesian Analysis of Formula One Race Results"
-# Last edited 2021-05-16 by @vankesteren
+# Last edited 2021-08-04 by @vankesteren
 # Contents: data processing, status filtering, outcome computation, some EDA
 library(tidyverse)
 library(firatheme)
@@ -24,7 +24,7 @@ compute_classified <- function(status) {
   out
 }
 
-# compute prop. of finished drivers beaten in each round
+# compute prop. of finished drivers outperformed in each round
 f1_dat_finished <-
   f1_dat %>%
   group_by(year, round) %>%
@@ -79,10 +79,10 @@ f1_dat_finished %>%
   theme_fira() +
   scale_fill_fira() +
   labs(
-    x = "Smoothed proportion of drivers beaten",
+    x = "Smoothed proportion of outperformed drivers",
     y = "Density",
     title = "Different drivers' results",
-    subtitle = "Proportion of finished drivers beaten",
+    subtitle = "Proportion of finished drivers outperformed",
     fill = ""
   ) +
   theme(legend.position = "top", axis.text.x = element_text(angle = 45, vjust = 0.85)) +
