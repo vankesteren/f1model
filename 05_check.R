@@ -26,7 +26,7 @@ pred_tab <-
   distinct() %>%
   mutate(weather_type = "dry", circuit_type = "permanent")
 
-# predict proportion of defeated drivers
+# predict proportion of outperformed drivers
 pp_tab <- posterior_predict(fit, pred_tab)
 
 
@@ -68,7 +68,7 @@ bind_rows(pred_tab_long, true_tab_long) %>%
   theme(legend.position = "top") +
   labs(
     title = "2019 season posterior predictive check",
-    x = "Proportion of drivers beaten",
+    x = "Proportion of outperformed drivers",
     y = "",
     fill = ""
   )
@@ -185,7 +185,7 @@ bind_rows(pred_tab_long, true_tab_long) %>%
   theme(legend.position = "top") +
   labs(
     title = "2015 season posterior predictive check",
-    x = "Proportion of drivers beaten",
+    x = "Proportion of outperformed drivers",
     y = "",
     fill = ""
   )
