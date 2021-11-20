@@ -1,5 +1,5 @@
 # Code accompanying the manuscript "Bayesian Analysis of Formula One Race Results"
-# Last edited 2021-05-16 by @vankesteren
+# Last edited 2021-11-20 by @vankesteren
 # Contents: Inferences using posteriors of parameters
 library(tidyverse)
 library(brms)
@@ -7,80 +7,123 @@ library(firatheme)
 library(patchwork)
 library(glue)
 
-fit <- read_rds("dat/fit_weather.rds")
+fit <- read_rds("fit/fit_weather.rds")
 
 # Inference about driver skill ----
 drivers_2021 <- c("hamilton", "bottas", "ricciardo", "norris", "sainz", "leclerc", "russell", "latifi",
                   "max_verstappen", "perez", "mick_schumacher", "mazepin", "ocon", "alonso", "raikkonen",
                   "giovinazzi", "vettel", "stroll", "tsunoda", "gasly")
 
-driver_pars <- posterior_samples(fit, pars = "r_driver\\[.+Intercept")
-wet_pars    <- posterior_samples(fit, pars = "r_driver\\[.+weather_typewet")
-colnames(driver_pars) <- colnames(wet_pars) <- str_extract(colnames(driver_pars), "(?<=\\[).+(?=\\,Intercept])")
+# extract all driver parameters
+driver_intercepts <- as_draws_df(fit, variable = "r_driver\\[.+Intercept", regex = TRUE)
+driver_slopes     <- as_draws_df(fit, variable = "r_driver\\[.+n_years", regex = TRUE)
+driver_wet        <- as_draws_df(fit, variable = "r_driver\\[.+weather_typewet", regex = TRUE)
 
-driver_skill_samples <-
-  as_tibble(driver_pars) %>%
-  pivot_longer(everything(), names_to = "Driver", values_to = "Skill")
+# drop unnecessary columns
+driver_intercepts <- driver_intercepts %>% as_tibble() %>% select(!starts_with("."))
+driver_slopes     <- driver_slopes %>% as_tibble() %>% select(!starts_with("."))
+driver_wet        <- driver_wet %>% as_tibble() %>% select(!starts_with("."))
 
-wet_skill_samples <-
-  as_tibble(wet_pars + driver_pars) %>%
-  pivot_longer(everything(), names_to = "Driver", values_to = "Skill")
+# rename nicely
+drivers_ordered <- str_extract(colnames(driver_intercepts), "(?<=\\[).+(?=\\,Intercept])")
+colnames(driver_intercepts) <- drivers_ordered
+colnames(driver_slopes)     <- drivers_ordered
+colnames(driver_wet)        <- drivers_ordered
 
-driver_skill_summary <-
-  driver_skill_samples %>%
-  group_by(Driver) %>%
+# select only 2021 drivers
+driver_intercepts <- driver_intercepts %>% select(contains(drivers_2021))
+driver_slopes     <- driver_slopes %>% select(contains(drivers_2021))
+driver_wet        <- driver_wet %>% select(contains(drivers_2021))
+
+# find n_years for those drivers
+f1_dat_finished <- read_rds("dat/f1_dat_finished.rds")
+driver_nyears <-
+  f1_dat_finished %>%
+  select(driver, year) %>%
+  group_by(driver) %>%
+  summarize(n_years = nlevels(as_factor(year))) %>%
+  filter(driver %in% drivers_2021)
+
+# Transform to long format
+driver_intercepts_long <-
+  driver_intercepts %>%
+  pivot_longer(everything(), names_to = "driver", values_to = "skill")
+
+driver_slopes_long <-
+  driver_slopes %>%
+  pivot_longer(everything(), names_to = "driver", values_to = "skill")
+
+driver_wet_long <-
+  driver_wet %>%
+  pivot_longer(everything(), names_to = "driver", values_to = "skill")
+
+# put everything in one table
+driver_skills_2021 <-
+  driver_intercepts_long %>%
+  left_join(driver_nyears) %>%
+  mutate(inc_skill = driver_slopes_long$skill,
+         wet_skill = driver_wet_long$skill,
+         exp_dry_skill = skill + n_years*inc_skill,
+         exp_wet_skill = exp_dry_skill + wet_skill)
+
+
+# summarize for plotting
+dry_skill_summary <-
+  driver_skills_2021 %>%
+  group_by(driver) %>%
   summarise(
-    est = mean(Skill),
-    lower = quantile(Skill, 0.055),
-    upper = quantile(Skill, 0.945),
+    est = mean(exp_dry_skill),
+    lower = quantile(exp_dry_skill, 0.055),
+    upper = quantile(exp_dry_skill, 0.945),
   ) %>%
   arrange(-est)
 
 wet_skill_summary <-
-  wet_skill_samples %>%
-  group_by(Driver) %>%
+  driver_skills_2021 %>%
+  group_by(driver) %>%
   summarise(
-    est = mean(Skill),
-    lower = quantile(Skill, 0.055),
-    upper = quantile(Skill, 0.945),
+    est = mean(exp_wet_skill),
+    lower = quantile(exp_wet_skill, 0.055),
+    upper = quantile(exp_wet_skill, 0.945),
   ) %>%
   arrange(-est)
 
 plt_driver <-
-  driver_skill_summary %>%
-  filter(Driver %in% drivers_2021) %>%
+  dry_skill_summary %>%
   arrange(est) %>%
-  mutate(Driver = as_factor(Driver)) %>%
-  ggplot(aes(y = Driver)) +
+  mutate(driver = as_factor(driver)) %>%
+  ggplot(aes(y = driver)) +
   geom_pointrange(aes(x = est, xmin = lower, xmax = upper), colour = firaCols[3]) +
   theme_fira() +
-  labs(x = "Skill (log odds ratio)", title = "F1 driver skill",
-       subtitle = "Average hybrid-era (2014-2021) driver skill,\naccounting for yearly constructor advantage.")
+  labs(x = "Skill (log odds ratio)", title = "F1 driver skill in 2020")
 
 plt_driver_wet <-
   bind_rows(
-    driver_skill_summary %>% filter(Driver %in% drivers_2021) %>% arrange(est) %>% mutate(weather_type = "Dry race"),
-    wet_skill_summary %>% filter(Driver %in% drivers_2021) %>% mutate(weather_type = "Wet race")
+    dry_skill_summary %>% arrange(est) %>% mutate(weather_type = "Dry race"),
+    wet_skill_summary %>% mutate(weather_type = "Wet race")
   ) %>%
-  mutate(Driver = as_factor(Driver)) %>%
-  ggplot(aes(y = Driver, colour = weather_type)) +
+  mutate(driver = as_factor(driver)) %>%
+  ggplot(aes(y = driver, colour = weather_type)) +
   geom_pointrange(aes(x = est, xmin = lower, xmax = upper), position = position_dodge(width = -.6)) +
   theme_fira() +
   scale_colour_manual(values = c(firaCols[3], firaCols[1])) +
-  labs(x = "Skill (log odds ratio)", title = "F1 driver skill",
-       subtitle = "Average hybrid-era (2014-2020) driver skill,\naccounting for yearly constructor advantage.",
+  labs(x = "Skill (log odds ratio)", title = "F1 driver skill in 2020",
        colour = "") +
   theme(legend.position = "top")
 
-ggsave("img/driver_wet.png", width = 9, height = 9)
+ggsave("img/driver_wet.png", width = 9, height = 9, bg = "white")
 
 
 # Plot for constructor advantage ----
 constructors_2021 <- c("alfa", "alphatauri", "renault", "ferrari", "haas", "mclaren", "mercedes", "racing_point",
                        "red_bull", "williams")
 
-constructor_means <- posterior_samples(fit, "r_constructor\\[.+\\,Intercept\\]")
+
+# extract all constructor mean parameters
+constructor_means <- as_draws_df(fit, variable = "r_constructor\\[.+Intercept", regex = TRUE)
+constructor_means <- constructor_means %>% as_tibble() %>% select(!starts_with("."))
 colnames(constructor_means) <- str_extract(colnames(constructor_means), "(?<=\\[).+(?=\\,Intercept])")
+
 constructor_means_samples <-
   constructor_means %>%
   pivot_longer(
@@ -111,11 +154,13 @@ plt_constructor <-
 
 plt_constructor
 
-ggsave("img/constructor.png", width = 9, height = 7)
+ggsave("img/constructor.png", width = 9, height = 7, bg = "white")
 
 # Plot for constructor form per year
-constructoryear_pars <- posterior_samples(fit, "r_constructor:year")
+constructoryear_pars <- as_draws_df(fit, variable = "r_constructor:year\\[.+Intercept", regex = TRUE)
+constructoryear_pars <- constructoryear_pars %>% as_tibble() %>% select(!starts_with("."))
 colnames(constructoryear_pars) <- str_extract(colnames(constructoryear_pars), "(?<=\\[).+(?=\\,Intercept])")
+
 constructoryear_samples <-
   constructoryear_pars %>%
   pivot_longer(
@@ -161,13 +206,14 @@ constructor_progress <- function(const) {
 constructor_progress(c("ferrari", "mclaren", "mercedes", "red_bull")) +
   scale_colour_manual(values = c("red", "dark orange", "grey", "dark blue"))
 
-ggsave("img/constructor_form.png", width = 9, height = 6)
+ggsave("img/constructor_form.png", width = 9, height = 6, bg = "white")
 
 
 # Driver versus constructor contributions ----
-sd_samples <- posterior_samples(fit, "(sd|cor)_(driver|constructor)__(Intercept|weather_typewet)")
+sd_samples <- as_draws_df(fit, "(sd|cor)_(driver|constructor)__(Intercept|weather_typewet|n_years)", regex = TRUE)
 sd_samples <-
   sd_samples %>%
+  select(!starts_with(".")) %>%
   mutate(
     sd_driver_dry  = sd_driver__Intercept,
     # use standard formula for variance of correlated random variables to get std.dev of drivers in wet
@@ -197,5 +243,5 @@ ggsave("img/variance.png", width = 9, height = 5)
 
 # random effects standard deviation summary
 sfit <- summary(fit, prob = 0.89)
-ranef_summary <- rbind(sfit$random$constructor, sfit$random$`constructor:year`, sfit$random$driver)[1:5, 1:4]
+ranef_summary <- rbind(sfit$random$constructor, sfit$random$`constructor:year`, sfit$random$driver)[,1:4]
 xtable::xtable(ranef_summary)

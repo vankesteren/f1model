@@ -5,24 +5,29 @@ library(tidyverse)
 library(firatheme)
 library(brms)
 
-fit <- read_rds("dat/fit_weather.rds")
+fit <- read_rds("fit/fit_weather.rds")
 
 # in a wet race in 2020, how likely is it that raikkonen in a mercedes beats lewis in an alfa?
 raikkonen_mercedes <- posterior_predict(fit, tibble(
   year = 2020,
   constructor = "mercedes",
   driver = "raikkonen",
-  weather_type = "wet"
+  weather_type = "wet",
+  n_years = 7
 ))
 
 hamilton_alfa <- posterior_predict(fit, tibble(
   year = 2020,
   constructor = "alfa",
   driver = "hamilton",
-  weather_type = "wet"
+  weather_type = "wet",
+  n_years = 7
 ))
 
 delta <- hamilton_alfa - raikkonen_mercedes
+
+# expected value:
+mean(delta)
 
 ggplot(tibble(d = delta), aes(x = d)) +
   geom_density(fill = firaCols[4], alpha = 0.8) +
@@ -35,4 +40,4 @@ ggplot(tibble(d = delta), aes(x = d)) +
     y = "Density"
   )
 
-ggsave("img/counterfactual.png", width = 9, height = 5)
+ggsave("img/counterfactual.png", width = 9, height = 5, bg = "white")
