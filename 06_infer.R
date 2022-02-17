@@ -55,7 +55,7 @@ plt_driver <-
   geom_pointrange(aes(x = est, xmin = lower, xmax = upper), colour = firaCols[3]) +
   theme_fira() +
   labs(x = "Skill (log odds ratio)", title = "F1 driver skill",
-       subtitle = "Average hybrid-era (2014-2020) driver skill,\naccounting for yearly constructor advantage.")
+       subtitle = "Average hybrid-era (2014-2021) driver skill,\naccounting for yearly constructor advantage.")
 
 plt_driver_wet <-
   bind_rows(
@@ -196,6 +196,6 @@ ggsave("img/variance.png", width = 9, height = 5)
 
 
 # random effects standard deviation summary
-sfit <- summary(fit, prob = 0.89, )
+sfit <- summary(fit, prob = 0.89)
 ranef_summary <- rbind(sfit$random$constructor, sfit$random$`constructor:year`, sfit$random$driver)[1:5, 1:4]
 xtable::xtable(ranef_summary)
