@@ -1,5 +1,5 @@
 # Code accompanying the manuscript "Bayesian Analysis of Formula One Race Results"
-# Last edited 2021-05-16 by @vankesteren
+# Last edited 2022-02-17 by @vankesteren
 # Contents: data preparation, data joining from database f1db_csv.
 library(tidyverse)
 library(lubridate)
@@ -8,7 +8,7 @@ library(glue)
 library(rvest)
 
 # Date range for the analysis
-hybrid_era <- interval(ymd("2014-01-01"), ymd("2020-12-31"))
+hybrid_era <- interval(ymd("2014-01-01"), ymd("2021-12-31"))
 
 # Race information
 tab_races        <- read_csv("dat/f1db_csv/races.csv")
@@ -92,8 +92,16 @@ race_info[weather_missing_idx, "weather_type"] <- c(
   "dry", # australia 2019
   "dry", # china 2019
   "dry", # azerbaijan 2019
-  "dry"  # spain 2019
+  "dry", # spain 2019
+  "dry"  # brazil 2021
 )
+
+## Manually add missing circuit info ----
+circuit_missing_idx <- which(is.na(race_info$circuit_type))
+race_info[weather_missing_idx, "circuit_type"] <- c(
+  "permanent" # Brazil 2021
+)
+
 
 ## Select columns ----
 race_dat <- race_info %>%

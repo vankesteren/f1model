@@ -1,5 +1,5 @@
 # Code accompanying the manuscript "Bayesian Analysis of Formula One Race Results"
-# Last edited 2021-08-04 by @vankesteren
+# Last edited 2022-02-17 by @vankesteren
 # Contents: data processing, status filtering, outcome computation, some EDA
 library(tidyverse)
 library(firatheme)
