@@ -95,7 +95,7 @@ plt_driver <-
   ggplot(aes(y = driver)) +
   geom_pointrange(aes(x = est, xmin = lower, xmax = upper), colour = firaCols[3]) +
   theme_fira() +
-  labs(x = "Skill (log odds ratio)", title = "F1 driver skill in 2020")
+  labs(x = "Skill (log odds ratio)", title = "F1 driver skill in 2021")
 
 plt_driver_wet <-
   bind_rows(
@@ -107,7 +107,7 @@ plt_driver_wet <-
   geom_pointrange(aes(x = est, xmin = lower, xmax = upper), position = position_dodge(width = -.6)) +
   theme_fira() +
   scale_colour_manual(values = c(firaCols[3], firaCols[1])) +
-  labs(x = "Skill (log odds ratio)", title = "F1 driver skill in 2020",
+  labs(x = "Skill (log odds ratio)", title = "F1 driver skill in 2021",
        colour = "") +
   theme(legend.position = "top")
 
