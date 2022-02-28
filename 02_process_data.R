@@ -15,6 +15,13 @@ f1_dat <- f1_dat %>% mutate(
   circuit_type = as_factor(circuit_type)
 )
 
+# Compute n_years
+# The number of years in the sport since 2014, excluding non-joined seasons
+f1_dat <-
+  f1_dat %>%
+  group_by(driver) %>%
+  mutate(n_years = as.integer(as_factor(year)) - 1)
+
 # exclude all collisions & non-finishes
 compute_classified <- function(status) {
   out <- rep("not classified", length(status))

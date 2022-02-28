@@ -1,16 +1,16 @@
 # Code accompanying the manuscript "Bayesian Analysis of Formula One Race Results"
-# Last edited 2021-05-16 by @vankesteren
+# Last edited 2021-11-20 by @vankesteren
 # Contents: MCMC validation, posterior predictive checks
 library(tidyverse)
 library(brms)
 library(firatheme)
 
 f1_dat <- read_rds("dat/f1_dat_finished.rds")
-fit <- read_rds("dat/fit_weather.rds")
+fit <- read_rds("fit/fit_weather.rds")
 
 # MCMC mixing ----
-png("img/chains.png", width = 2700, height = 2000, res = 300)
-chains <- plot(fit, N = 6)
+png("img/chains.png", width = 2700, height = 5000, res = 300)
+chains <- plot(fit, N = 10)
 dev.off()
 
 # Rhat ----
@@ -22,7 +22,7 @@ any(rhats[!is.nan(rhats)] > 1.01)
 pred_tab <-
   f1_dat %>%
   filter(year == 2019) %>%
-  select(driver, constructor, year) %>%
+  select(driver, constructor, year, n_years) %>%
   distinct() %>%
   mutate(weather_type = "dry", circuit_type = "permanent")
 
@@ -34,7 +34,7 @@ pp_tab <- posterior_predict(fit, pred_tab)
 # yrep
 pred_tab_long <-
   pred_tab %>%
-  bind_cols(t(pp_tab) %>% as_tibble() %>% set_names(1:4000)) %>%
+  bind_cols(t(pp_tab) %>% as_tibble(.name_repair = "unique") %>% set_names(1:4000)) %>%
   pivot_longer(
     cols      = c(-driver, -constructor, -year, -weather_type, -circuit_type),
     names_to  = "sample",
@@ -73,7 +73,7 @@ bind_rows(pred_tab_long, true_tab_long) %>%
     fill = ""
   )
 
-ggsave("img/pp_check_prop_2019.png", width = 15, height = 12)
+ggsave("img/pp_check_prop_2019.png", width = 15, height = 12, bg = "white")
 
 
 
@@ -139,7 +139,7 @@ ggsave("img/pp_check_rank_2019.png", width = 15, height = 12)
 pred_tab <-
   f1_dat %>%
   filter(year == 2015) %>%
-  select(driver, constructor, year) %>%
+  select(driver, constructor, year, n_years) %>%
   distinct() %>%
   mutate(weather_type = "dry", circuit_type = "permanent")
 
@@ -151,7 +151,7 @@ pp_tab <- posterior_predict(fit, pred_tab)
 # yrep
 pred_tab_long <-
   pred_tab %>%
-  bind_cols(t(pp_tab) %>% as_tibble() %>% set_names(1:4000)) %>%
+  bind_cols(t(pp_tab) %>% as_tibble(.name_repair = "unique") %>% set_names(1:4000)) %>%
   pivot_longer(
     cols      = c(-driver, -constructor, -year, -weather_type, -circuit_type),
     names_to  = "sample",
