@@ -6,7 +6,7 @@ library(brms)
 library(firatheme)
 
 f1_dat <- read_rds("dat/f1_dat_finished.rds")
-fit <- read_rds("dat/fit_weather.rds")
+fit <- read_rds("fit/fit_basic.rds")
 
 # MCMC mixing ----
 png("img/chains.png", width = 2700, height = 2000, res = 300)
@@ -34,7 +34,7 @@ pp_tab <- posterior_predict(fit, pred_tab)
 # yrep
 pred_tab_long <-
   pred_tab %>%
-  bind_cols(t(pp_tab) %>% as_tibble() %>% set_names(1:4000)) %>%
+  bind_cols(t(pp_tab) %>% as_tibble(.name_repair = "minimal") %>% set_names(1:4000)) %>%
   pivot_longer(
     cols      = c(-driver, -constructor, -year, -weather_type, -circuit_type),
     names_to  = "sample",
@@ -73,7 +73,7 @@ bind_rows(pred_tab_long, true_tab_long) %>%
     fill = ""
   )
 
-ggsave("img/pp_check_prop_2019.png", width = 15, height = 12)
+ggsave("img/pp_check_prop_2019.png", width = 15, height = 12, bg = "white")
 
 
 
@@ -131,7 +131,7 @@ bind_rows(pred_rank_long, true_rank_long) %>%
     fill = ""
   )
 
-ggsave("img/pp_check_rank_2019.png", width = 15, height = 12)
+ggsave("img/pp_check_rank_2019.png", width = 15, height = 12, bg = "white")
 
 
 # 2015 posterior predictive check ----
@@ -190,7 +190,7 @@ bind_rows(pred_tab_long, true_tab_long) %>%
     fill = ""
   )
 
-ggsave("img/pp_check_prop_2015.png", width = 15, height = 12)
+ggsave("img/pp_check_prop_2015.png", width = 15, height = 12, bg = "white")
 
 
 
@@ -237,4 +237,4 @@ bind_rows(pred_rank_long, true_rank_long) %>%
     fill = ""
   )
 
-ggsave("img/pp_check_rank_2015.png", width = 15, height = 12)
+ggsave("img/pp_check_rank_2015.png", width = 15, height = 12, bg = "white")
