@@ -42,14 +42,6 @@ driver_skill_summary <-
     upper = quantile(skill_yr, 0.945),
   )
 
-driver_form_summary <-
-  driver_samples %>%
-  group_by(Driver, Year) %>%
-  summarise(
-    est = mean(Form),
-    lower = quantile(Form, 0.055),
-    upper = quantile(Form, 0.945),
-  )
 
 plt_skill_trajectory <-
   driver_skill_summary %>%
@@ -79,29 +71,14 @@ plt_driver_skill_2021 <-
   geom_pointrange(colour = firaCols[3]) +
   theme_fira() +
   labs(title = "2021 F1 driver skill",
-       subtitle = "2021 driver skill,\naccounting for yearly constructor advantage.",
+       subtitle = "Accounting for yearly constructor advantage.",
        x = "Skill (log odds ratio)",
        y = "Driver")
 
 ggsave("img/plt_skill_2021.png", plot = plt_driver_skill_2021, width = 9, height = 9, bg = "white")
 
 
-plt_driver_form_2021 <-
-  driver_form_summary %>%
-  ungroup() %>%
-  filter(Year == 2021) %>%
-  mutate(Driver = fct_reorder(Driver, est)) %>%
-  ggplot(aes(y = Driver, x = est, xmin = lower, xmax = upper)) +
-  geom_pointrange(colour = firaCols[5]) +
-  theme_fira() +
-  labs(title = "2021 F1 driver form",
-       subtitle = "2021 driver form,\naccounting for yearly constructor advantage.")
-
-
-ggsave("img/plt_skill_form_2021.png", plot = plt_driver_skill_2021 + plt_driver_form_2021, width = 12, height = 9, bg = "white")
-
-
-# Plot for constructor advantage ----
+# Inference about constructor advantage ----
 constructors_focus <- c("ferrari", "haas", "mclaren", "mercedes", "red_bull", "williams")
 
 constructor_mean <- as_draws_df(fit, variable = "r_constructor\\[.+Intercept]", regex = TRUE) %>% select(-.chain, -.iteration)
@@ -137,6 +114,7 @@ plt_advantage_trajectory <-
   constructor_advantage_summary %>%
   ungroup() %>%
   filter(Constructor %in% constructors_focus) %>%
+  mutate(Constructor = fct_relevel(Constructor, "ferrari", "mercedes", "red_bull", "mclaren", "haas", "williams")) %>%
   ggplot(aes(x = Year, y = est, ymin = lower, ymax = upper)) +
   geom_ribbon(aes(fill = Constructor), alpha = .2) +
   geom_line(aes(colour = Constructor)) +
@@ -150,18 +128,34 @@ plt_advantage_trajectory <-
 
 ggsave("img/plt_advantage_trajectory.png", plot = plt_advantage_trajectory, width = 12, height = 9, bg = "white")
 
-plt_advantage_2021 <-
-  constructor_advantage_summary %>%
+
+constructors_2021 <- c("alfa", "alphatauri", "alpine", "ferrari", "haas", "mclaren",
+                       "mercedes", "aston_martin", "red_bull", "williams")
+
+constructor_mean_summary <-
+  constructor_mean_long %>%
+  group_by(Constructor) %>%
+  summarise(
+    est = mean(Advantage),
+    lower = quantile(Advantage, 0.055),
+    upper = quantile(Advantage, 0.945),
+  )
+
+plt_advantage_avg <-
+  constructor_mean_summary %>%
   ungroup() %>%
-  filter(Year == 2021) %>%
+  filter(Constructor %in% constructors_2021) %>%
   mutate(Constructor = fct_reorder(Constructor, est)) %>%
   ggplot(aes(y = Constructor, x = est, xmin = lower, xmax = upper)) +
   geom_pointrange(colour = firaCols[1]) +
   theme_fira() +
-  labs(title = "2021 F1 constructor advantage",
-       subtitle = "2021 constructor advantage,\naccounting for yearly driver skill.")
+  labs(title = "Average hybrid-era F1 constructor advantage",
+       subtitle = "Accounting for yearly driver skill and constructor form.",
+       x = "Advantage (log odds ratio)",
+       y = "Constructor")
 
-ggsave("img/plt_advantage_2021.png", plot = plt_advantage_2021, width = 12, height = 9, bg = "white")
+ggsave("img/plt_advantage_avg.png", plot = plt_advantage_avg, width = 9, height = 6, bg = "white")
+
 
 
 # Driver versus constructor contributions ----
@@ -180,3 +174,29 @@ colSums(ranef_summary[1:2,]^2)/colSums(ranef_summary^2)
 
 # and how much due to the driver?
 colSums(ranef_summary[3:4,]^2)/colSums(ranef_summary^2)
+
+
+
+# Overall performance in 2021 ----
+grid_2021 <-
+  f1_dat %>%
+  filter(year == 2021, driver != "kubica") %>% # kubica only did one race
+  select(driver, constructor, year) %>%
+  distinct() %>%
+  arrange(constructor)
+
+pp_2021 <- posterior_predict(fit, grid_2021)
+pp_2021_summary <-
+  pp_2021 %>%
+  as_tibble(.name_repair = "minimal") %>%
+  set_names(grid_2021$driver) %>%
+  pivot_longer(everything(), names_to = "driver") %>%
+  group_by(driver) %>%
+  summarise(est = mean(value), lower = quantile(value, 0.045), upper = quantile(value, 0.955)) %>%
+  left_join(grid_2021) %>%
+  select(driver, constructor, performance = est, lower, upper) %>%
+  arrange(-performance)
+
+xtable::xtable(pp_2021_summary, digits = 3)
+
+ggsave("img/plt_performance_2021.png", width = 6, height = 9, bg = "white")
