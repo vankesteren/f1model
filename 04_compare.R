@@ -29,15 +29,12 @@ write_rds(loo_results, "fit/loo_results.rds")
 xtable::xtable(loo_results)
 
 #                   elpd_diff se_diff
-# Weather            0.0       0.0
-# Basic             -0.3       2.2
-# Circuit + Weather -0.7       0.6
-# Circuit           -2.3       2.3
+# Basic              0.0       0.0
+# Circuit           -1.0       0.5
+# Weather           -1.2       1.3
+# Circuit + Weather -1.9       1.4
 
-# model including weather works best, but is similar to basic model
-elpd_diff  se_diff    elpd_loo   se_elpd_loo p_loo      se_p_loo   looic      se_looic
-<compar.l> <compar.l> <compar.l> <compar.l>  <compar.l> <compar.l> <compar.l> <compar.l>
-1  0.0000000 0.0000000  1443.505   46.58635    120.9712   4.459578   -2887.010  93.17271
-2 -0.3050344 1.4172372  1443.200   46.61676    127.8621   4.792843   -2886.400  93.23351
-3 -0.3836410 0.5706045  1443.122   46.54169    123.3310   4.554304   -2886.243  93.08338
-4 -2.4080530 1.4606067  1441.097   46.61889    131.6624   4.928787   -2882.194  93.23779
+# basic works best
+
+# comparing basic to next best model
+bayes_factor(fit_basic, fit_circuit)

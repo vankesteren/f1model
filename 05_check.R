@@ -9,9 +9,11 @@ f1_dat <- read_rds("dat/f1_dat_finished.rds")
 fit <- read_rds("fit/fit_basic.rds")
 
 # MCMC mixing ----
-png("img/chains.png", width = 2700, height = 2000, res = 300)
-chains <- plot(fit, N = 6)
-dev.off()
+mcmc_plot(fit, type = "trace") +
+  facet_wrap(~parameter, nrow = 6, scales = "free") +
+  theme_fira() +
+  scale_colour_fira()
+ggsave("img/chains.png", width = 7, height = 10, bg = "white")
 
 # Rhat ----
 rhats <- rhat(fit)
@@ -34,7 +36,7 @@ pp_tab <- posterior_predict(fit, pred_tab)
 # yrep
 pred_tab_long <-
   pred_tab %>%
-  bind_cols(t(pp_tab) %>% as_tibble(.name_repair = "minimal") %>% set_names(1:4000)) %>%
+  bind_cols(t(pp_tab) %>% as_tibble(.name_repair = "minimal") %>% set_names(1:10000)) %>%
   pivot_longer(
     cols      = c(-driver, -constructor, -year, -weather_type, -circuit_type),
     names_to  = "sample",
@@ -93,7 +95,7 @@ pp_ranks <-
   t() %>%
   as_tibble(.name_repair = "unique") %>%
   mutate(across(.fns = as.integer)) %>%
-  set_names(1:4000)
+  set_names(1:10000)
 
 
 
@@ -117,7 +119,7 @@ true_rank_long <-
 
 
 bind_rows(pred_rank_long, true_rank_long) %>%
-  filter(is.na(sample) | sample %in% sample(4000, 23)) %>%
+  filter(is.na(sample) | sample %in% sample(10000, 23)) %>%
   ggplot(aes(x = factor(position), fill = origin)) +
   geom_bar(position = position_dodge(preserve = "single")) +
   facet_wrap(~factor(driver, levels = ordered_levels)) +
@@ -151,7 +153,7 @@ pp_tab <- posterior_predict(fit, pred_tab)
 # yrep
 pred_tab_long <-
   pred_tab %>%
-  bind_cols(t(pp_tab) %>% as_tibble() %>% set_names(1:4000)) %>%
+  bind_cols(t(pp_tab) %>% as_tibble() %>% set_names(1:10000)) %>%
   pivot_longer(
     cols      = c(-driver, -constructor, -year, -weather_type, -circuit_type),
     names_to  = "sample",
@@ -201,7 +203,7 @@ pp_ranks <-
   t() %>%
   as_tibble() %>%
   mutate(across(.fns = as.integer)) %>%
-  set_names(1:4000)
+  set_names(1:10000)
 
 # yrep
 pred_rank_long <-
@@ -223,7 +225,7 @@ true_rank_long <-
 
 
 bind_rows(pred_rank_long, true_rank_long) %>%
-  filter(is.na(sample) | sample %in% sample(4000, 23)) %>%
+  filter(is.na(sample) | sample %in% sample(10000, 23)) %>%
   ggplot(aes(x = factor(position), fill = origin)) +
   geom_bar(position = position_dodge(preserve = "single")) +
   facet_wrap(~factor(driver, levels = ordered_levels)) +
