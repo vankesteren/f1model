@@ -13,8 +13,11 @@ fit_basic <- brm(
   family  = Beta(),
   data    = f1_dat_finished,
   backend = "cmdstanr",
+  chains  = 4,
   cores   = 4,
-  threads = 3
+  threads = 3,
+  warmup  = 1000,
+  iter    = 3500
 )
 
 summary(fit_basic)
@@ -26,8 +29,11 @@ fit_weather <- brm(
   family  = Beta(),
   data    = f1_dat_finished,
   backend = "cmdstanr",
+  chains  = 4,
   cores   = 4,
-  threads = 3
+  threads = 3,
+  warmup  = 1000,
+  iter    = 3500
 )
 
 summary(fit_weather)
@@ -39,8 +45,11 @@ fit_circuit <- brm(
   family  = Beta(),
   data    = f1_dat_finished,
   backend = "cmdstanr",
+  chains  = 4,
   cores   = 4,
-  threads = 3
+  threads = 3,
+  warmup  = 1000,
+  iter    = 3500
 )
 
 summary(fit_circuit)
@@ -52,8 +61,11 @@ fit_weather_circuit <- brm(
   family  = Beta(),
   data    = f1_dat_finished,
   backend = "cmdstanr",
+  chains  = 4,
   cores   = 4,
-  threads = 3
+  threads = 3,
+  warmup  = 1000,
+  iter    = 3500
 )
 
 summary(fit_weather_circuit)
