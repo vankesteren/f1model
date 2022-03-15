@@ -1,6 +1,6 @@
 # Bayesian Analysis of Formula One Race Results
 
-Repository containing code, data & presentation accompanying the manuscript _Bayesian Analysis of Formula One Race Results_. The scripts contain the following:
+Repository containing code, data & presentation accompanying the manuscript _Bayesian Analysis of Formula One Race Results: Disentangling Driver Skill and Constructor Advantage_. The scripts contain the following:
 
 | Script                                     | Contents                                                         |
 | :----------------------------------------- | :--------------------------------------------------------------- |
