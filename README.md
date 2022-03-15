@@ -1,5 +1,7 @@
 # Bayesian Analysis of Formula One Race Results
 
+[![DOI](https://zenodo.org/badge/352695980.svg)](https://zenodo.org/badge/latestdoi/352695980)
+
 Repository containing code, data & presentation accompanying the manuscript _Bayesian Analysis of Formula One Race Results: Disentangling Driver Skill and Constructor Advantage_. The scripts contain the following:
 
 | Script                                     | Contents                                                         |
