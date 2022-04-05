@@ -46,16 +46,16 @@ ggplot(f1_dat_finished, aes(x = factor(position))) +
   theme_fira() +
   labs(
     title = "Distribution of finish positions",
-    subtitle = "F1 hybrid era (2014-2020)",
+    subtitle = "F1 hybrid era (2014-2021)",
     x = "Finish position",
     y = "Count"
   )
 
-ggsave("img/eda_finish_position.png", width = 9, height = 6)
+ggsave("img/eda_finish_position.png", width = 9, height = 6, bg = "white")
 
 # basic plot
 f1_dat_finished %>%
-  filter(driver %in% c("hamilton", "raikkonen", "giovinazzi")) %>%
+  filter(driver %in% c("hamilton", "raikkonen", "giovinazzi"), year > 2015) %>%
   ggplot(aes(x = factor(position), fill = driver)) +
   geom_bar(position = position_dodge(preserve = "single")) +
   theme_fira() +
@@ -70,10 +70,10 @@ f1_dat_finished %>%
   theme(legend.position = "top") +
   facet_wrap(~year)
 
-ggsave("img/eda_finish_drivers.png", width = 12, height = 9)
+ggsave("img/eda_finish_drivers.png", width = 9, height = 6, bg = "white")
 
 f1_dat_finished %>%
-  filter(driver %in% c("hamilton", "raikkonen", "giovinazzi"), year != 2014) %>%
+  filter(driver %in% c("hamilton", "raikkonen", "giovinazzi"), year > 2015) %>%
   ggplot(aes(x = prop_trans, fill = driver)) +
   geom_density(alpha = 0.5, bw = 0.1) +
   theme_fira() +
@@ -88,4 +88,4 @@ f1_dat_finished %>%
   theme(legend.position = "top", axis.text.x = element_text(angle = 45, vjust = 0.85)) +
   facet_wrap(~year)
 
-ggsave("img/eda_finish_drivers_prop.png", width = 9, height = 6)
+ggsave("img/eda_finish_drivers_prop.png", width = 9, height = 6, bg = "white")
