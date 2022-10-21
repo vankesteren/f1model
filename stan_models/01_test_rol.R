@@ -37,6 +37,7 @@ stan_data <- list(
   N = sum(!is.na(R))
 )
 fit_rol_opt <- mod_rol$optimize(data = stan_data)
+theta_hat <- fit_rol_opt$summary("theta")$estimate
 
 # Comparing log-posterior
 fit_pl$logposterior
