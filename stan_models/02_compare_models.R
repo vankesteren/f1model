@@ -253,7 +253,7 @@ rank_team |>
   geom_point() +
   theme_minimal() +
   facet_wrap(~as_factor(team_name)) +
-  labs(title = "ROL model team skills")
+  labs(title = "Rank model team skills")
 
 
 ggsave("stan_models/img/rank_team.png", bg = "white", width = 12, height = 8)

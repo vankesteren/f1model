@@ -50,7 +50,7 @@ stan_data_beta <- list(
   season_id = f1_dat |> filter(finished) |> pull(year) |> as.factor() |> as.integer()
 )
 
-beta_fit <- beta_mod$sample(stan_data_beta, parallel_chains = 4, max_treedepth = 14)
+beta_fit <- beta_mod$sample(stan_data_beta, parallel_chains = 4, max_treedepth = 14, iter_sampling = 2000)
 
 beta_fit$save_object("stan_models/fits/beta_fit.rds")
 
@@ -71,7 +71,7 @@ stan_data_rank <- list(
   season_id = f1_dat |> filter(finished) |> group_by(year, round) |> summarize(year = factor(first(year))) |> pull(year) |> as.integer()
 )
 
-rank_fit <- rank_mod$sample(stan_data_rank, parallel_chains = 4)
+rank_fit <- rank_mod$sample(stan_data_rank, parallel_chains = 4, iter_sampling = 2000)
 
 rank_fit$save_object("stan_models/fits/rank_fit.rds")
 
