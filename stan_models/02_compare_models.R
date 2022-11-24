@@ -42,6 +42,7 @@ teams_focus <- c("mercedes", "red_bull", "ferrari", "williams", "mclaren", "toro
 
 beta_fit <- read_rds("stan_models/fits/beta_fit.rds")
 rank_fit <- read_rds("stan_models/fits/rank_fit.rds")
+ar_fit   <- read_rds("stan_models/fits/ar_fit.rds")
 
 # Variance components ----
 beta_sd_driver <- beta_fit$draws("tau_driver")
@@ -60,9 +61,17 @@ rank_var_driver <- rank_sd_driver^2 + rank_sd_driver_season^2
 rank_var_team <- rank_sd_team^2 + rank_sd_team_season^2
 rank_prop_var <- rank_var_team / (rank_var_team + rank_var_driver)
 
+ar_sd_driver <- ar_fit$draws("tau_driver")
+ar_sd_driver_season <- ar_fit$draws("tau_driver_season")
+ar_sd_team <- ar_fit$draws("tau_team")
+ar_sd_team_season <- ar_fit$draws("tau_team_season")
+ar_var_driver <- ar_sd_driver^2 + ar_sd_driver_season^2
+ar_var_team <- ar_sd_team^2 + ar_sd_team_season^2
+ar_prop_var <- ar_var_team / (ar_var_team + ar_var_driver)
+
 tibble(
-  prop = c(rank_prop_var, beta_prop_var),
-  model = rep(c("rank", "beta"), each = 8000)
+  prop = c(rank_prop_var, beta_prop_var, ar_prop_var),
+  model = rep(c("rank", "beta", "ar"), each = 8000)
 ) |>
   ggplot(aes(x = prop, fill = model)) +
   geom_density(alpha = 0.6) +
@@ -158,10 +167,39 @@ rank_driver |>
 
 ggsave("stan_models/img/rank_driver.png", bg = "white", width = 12, height = 8)
 
+
+# AR model
+ar_driver <-
+  ar_fit$draws("driver_skill", format = "draws_df") |>
+  pivot_longer(
+    starts_with("driver_skill"),
+    names_to = c("driver_id", "season_num"),
+    names_pattern = "driver_skill\\[(\\d+),(\\d+)]",
+    names_transform = as.integer
+  ) |>
+  mutate(driver_name = levels(f1_dat |> pull(driver))[driver_id]) |>
+  group_by(driver_name, season_num) |>
+  summarize(y = mean(value), ymin = quantile(value, 0.055), ymax = quantile(value, 0.945))
+
+ar_driver |>
+  filter(driver_name %in% drivers_focus) |>
+  ggplot(aes(x = season_num, y = y, ymin = ymin, ymax = ymax, colour = driver_name, fill = driver_name)) +
+  geom_ribbon(alpha = .5, colour = NA) +
+  geom_line() +
+  geom_point() +
+  theme_minimal() +
+  facet_wrap(~as_factor(driver_name)) +
+  labs(title = "AR model driver skills")
+
+ggsave("stan_models/img/ar_driver.png", bg = "white", width = 12, height = 8)
+
+
+
 # direct comparison
 bind_rows(
   rank_driver |> mutate(model = "rank"),
-  beta_driver |> mutate(model = "beta")
+  beta_driver |> mutate(model = "beta"),
+  ar_driver |> mutate(model = "ar"),
 ) |>
   filter(driver_name %in% drivers_focus) |>
   ggplot(aes(x = season_num, y = y, ymin = ymin, ymax = ymax, colour = model, fill = model)) +
@@ -258,11 +296,37 @@ rank_team |>
 
 ggsave("stan_models/img/rank_team.png", bg = "white", width = 12, height = 8)
 
+# ar model
+ar_team <-
+  ar_fit$draws("team_skill", format = "draws_df") |>
+  pivot_longer(
+    starts_with("team_skill"),
+    names_to = c("team_id", "season_num"),
+    names_pattern = "team_skill\\[(\\d+),(\\d+)]",
+    names_transform = as.integer
+  ) |>
+  mutate(team_name = levels(f1_dat |> pull(constructor))[team_id]) |>
+  group_by(team_name, season_num) |>
+  summarize(y = mean(value), ymin = quantile(value, 0.055), ymax = quantile(value, 0.945))
+
+ar_team |>
+  filter(team_name %in% teams_focus) |>
+  ggplot(aes(x = season_num, y = y, ymin = ymin, ymax = ymax, colour = team_name, fill = team_name)) +
+  geom_ribbon(alpha = .5, colour = NA) +
+  geom_line() +
+  geom_point() +
+  theme_minimal() +
+  facet_wrap(~as_factor(team_name)) +
+  labs(title = "AR model team skills")
+
+ggsave("stan_models/img/ar_team.png", bg = "white", width = 12, height = 8)
+
 
 # direct comparison
 bind_rows(
   rank_team |> mutate(model = "rank"),
-  beta_team |> mutate(model = "beta")
+  beta_team |> mutate(model = "beta"),
+  ar_team |> mutate(model = "ar")
 ) |>
   filter(team_name %in% teams_focus) |>
   ggplot(aes(x = season_num, y = y, ymin = ymin, ymax = ymax, colour = model, fill = model)) +

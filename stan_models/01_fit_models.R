@@ -75,7 +75,9 @@ rank_fit <- rank_mod$sample(stan_data_rank, parallel_chains = 4, iter_sampling =
 
 rank_fit$save_object("stan_models/fits/rank_fit.rds")
 
+# ROL model with AR ----
 
-
-
+ar_mod <- cmdstan_model("stan_models/rank_model_ar.stan")
+ar_fit <- rank_mod$sample(stan_data_rank, parallel_chains = 4, iter_sampling = 2000)
+ar_fit$save_object("stan_models/fits/ar_fit.rds")
 
