@@ -37,3 +37,8 @@ rsconnect/
 
 # Stan executables
 stan_models/*.exe
+stan_models/old/*.exe
+
+# stan fits
+stan_models/fits/*.rds
+
