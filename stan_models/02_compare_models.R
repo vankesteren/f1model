@@ -62,7 +62,7 @@ rank_prop_var <- rank_var_team / (rank_var_team + rank_var_driver)
 
 tibble(
   prop = c(rank_prop_var, beta_prop_var),
-  model = rep(c("rank", "beta"), each = 4000)
+  model = rep(c("rank", "beta"), each = 8000)
 ) |>
   ggplot(aes(x = prop, fill = model)) +
   geom_density(alpha = 0.6) +
