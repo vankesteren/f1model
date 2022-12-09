@@ -36,9 +36,9 @@ vignettes/*.pdf
 rsconnect/
 
 # Stan executables
-stan_models/*.exe
-stan_models/old/*.exe
+model_comparison/stan_models/*.exe
+model_comparison/stan_models/old/*.exe
 
 # stan fits
-stan_models/fits/*.rds
+model_comparison/fits/*.rds
 
