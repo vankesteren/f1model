@@ -202,7 +202,7 @@ slope_driver <-
   left_join(slope_driver_intercepts, slope_driver_slopes, by = c(".chain", ".iteration", ".draw", "driver_id")) |>
   mutate(season_num = list(1:8)) |>
   unnest_longer(season_num) |>
-  mutate(value = value.x + season_num * value.y) |>
+  mutate(value = value.x + (season_num - 5) * value.y) |>
   mutate(driver_name = levels(f1_dat |> pull(driver))[driver_id]) |>
   group_by(driver_name, season_num) |>
   summarize(y = mean(value), ymin = quantile(value, 0.055), ymax = quantile(value, 0.945))

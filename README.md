@@ -2,7 +2,11 @@
 
 [![DOI](https://zenodo.org/badge/352695980.svg)](https://zenodo.org/badge/latestdoi/352695980)
 
-Repository containing code, data & presentation accompanying the manuscript _Bayesian Analysis of Formula One Race Results: Disentangling Driver Skill and Constructor Advantage_. The scripts contain the following:
+Repository containing code, data & presentation accompanying the manuscript _Bayesian Analysis of Formula One Race Results: Disentangling Driver Skill and Constructor Advantage_. 
+
+> Note: [`tag:v1.0`](https://github.com/vankesteren/f1model/releases/tag/v1.0) used Beta regression via the `brms` package rather than the current `cmdstanr` rank-ordered logit implementation. The [`model_comparison`](./model_comparison/) folder compares the old and the current implementation.
+
+The scripts contain the following:
 
 | Script                                     | Contents                                                         |
 | :----------------------------------------- | :--------------------------------------------------------------- |

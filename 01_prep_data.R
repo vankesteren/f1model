@@ -1,5 +1,5 @@
 # Code accompanying the manuscript "Bayesian Analysis of Formula One Race Results"
-# Last edited 2022-02-17 by @vankesteren
+# Last edited 2022-12-11 by @vankesteren
 # Contents: data preparation, data joining from database f1db_csv.
 library(tidyverse)
 library(lubridate)
@@ -115,7 +115,7 @@ results_dat <-
   left_join(tab_status, by = "statusId") %>%
   select(raceId, positionText, positionOrder, fastestLapTime, driverRef, constructorRef, status)
 
-# Joining & cleaning ----
+# Joining, cleaning & saving ----
 f1_dat <-
   race_dat %>%
   left_join(results_dat, by = "raceId") %>%
@@ -124,5 +124,31 @@ f1_dat <-
          position = positionOrder, fastest_lab = fastestLapTime) %>%
   select(driver, constructor, year, round, circuit, position, weather_type, circuit_type, status) %>%
   mutate(year = as.integer(year), round = as.integer(round), position = as.integer(position))
+
+# convert to factors
+f1_dat <-
+  f1_dat %>%
+  mutate(
+    status       = as_factor(status),
+    constructor  = as_factor(constructor),
+    driver       = as_factor(driver),
+    weather_type = as_factor(weather_type),
+    circuit_type = as_factor(circuit_type)
+  )
+
+# Adding a finished indicator
+compute_classified <- function(status) {
+  out <- rep(FALSE, length(status))
+  # anyone above the last person still running (finished or +n laps is classified)
+  last_classified <- max(which(status == "Finished" | str_starts(status, "\\+")))
+  out[1:last_classified] <- TRUE
+  out
+}
+
+f1_dat <-
+  f1_dat %>%
+  group_by(year, round) %>%
+  mutate(finished = compute_classified(status)) %>%
+  ungroup()
 
 write_rds(f1_dat, "dat/f1_dat.rds")
