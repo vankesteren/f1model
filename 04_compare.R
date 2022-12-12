@@ -37,9 +37,9 @@ xtable::xtable(loo_results)
 
 #                   elpd_diff se_diff
 # Circuit            0.0       0.0
-# Circuit + Weather -0.6       1.8
-# Basic             -2.5       6.2
-# Weather           -5.4       6.2
+# Basic             -2.3       6.1
+# Circuit + Weather -2.7       2.2
+# Weather           -4.7       6.3
 
 # Circuit works best
 

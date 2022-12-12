@@ -24,22 +24,22 @@ stan_data <- list(
 )
 
 # basic model
-mod_basic <- cmdstan_model("stan_models/rank_model.stan")
-fit_basic <- mod_basic$sample(stan_data, chains = 8, parallel_chains = 8, iter_sampling = 1000, max_treedepth = 12)
+mod_basic <- cmdstan_model("stan_models/basic_model.stan")
+fit_basic <- mod_basic$sample(stan_data, chains = 8, parallel_chains = 8, iter_sampling = 1000)
 fit_basic$save_object("fit/basic.rds")
 
 # weather model
 mod_weather <- cmdstan_model("stan_models/weather_model.stan")
-fit_weather <- mod_weather$sample(stan_data, chains = 8, parallel_chains = 8, iter_sampling = 1000, max_treedepth = 12)
+fit_weather <- mod_weather$sample(stan_data, chains = 8, parallel_chains = 8, iter_sampling = 1000)
 fit_weather$save_object("fit/weather.rds")
 
 # circuit type model
 mod_circuit <- cmdstan_model("stan_models/circuit_model.stan")
-fit_circuit <- mod_circuit$sample(stan_data, chains = 8, parallel_chains = 8, iter_sampling = 1000, max_treedepth = 12)
+fit_circuit <- mod_circuit$sample(stan_data, chains = 8, parallel_chains = 8, iter_sampling = 1000)
 fit_circuit$save_object("fit/circuit.rds")
 
 # weather + circuit type model
 # weather model
 mod_all <- cmdstan_model("stan_models/weather_circuit_model.stan")
-fit_all <- mod_all$sample(stan_data, chains = 8, parallel_chains = 8, iter_sampling = 1000, max_treedepth = 12)
+fit_all <- mod_all$sample(stan_data, chains = 8, parallel_chains = 8, iter_sampling = 1000)
 fit_all$save_object("fit/weather_circuit.rds")

@@ -27,13 +27,12 @@ data {
 }
 
 parameters {
-  vector[num_drivers] theta_driver;
-  vector[num_teams] theta_team;
-  matrix[num_drivers, num_seasons] theta_driver_season;
-  matrix[num_teams, num_seasons] theta_team_season;
-
-  vector[num_drivers] weather_effect;
-  vector[num_drivers] circuit_effect;
+  vector[num_drivers] theta_driver_raw;
+  vector[num_teams] theta_team_raw;
+  matrix[num_drivers, num_seasons] theta_driver_season_raw;
+  matrix[num_teams, num_seasons] theta_team_season_raw;
+  vector[num_drivers] weather_effect_raw;
+  vector[num_drivers] circuit_effect_raw;
 
   real<lower=0> tau_driver;
   real<lower=0> tau_team;
@@ -44,7 +43,20 @@ parameters {
 }
 
 transformed parameters {
+  // non-centered parametrization
+  vector[num_drivers] theta_driver;
+  vector[num_teams] theta_team;
+  matrix[num_drivers, num_seasons] theta_driver_season;
+  matrix[num_teams, num_seasons] theta_team_season;
+  vector[num_drivers] weather_effect;
+  vector[num_drivers] circuit_effect;
 
+  theta_driver = tau_driver * theta_driver_raw;
+  theta_team = tau_team * theta_team_raw;
+  theta_driver_season = tau_driver_season * theta_driver_season_raw;
+  theta_team_season = tau_team_season * theta_team_season_raw;
+  weather_effect = tau_weather * weather_effect_raw;
+  circuit_effect = tau_circuit * circuit_effect_raw;
 }
 
 model {
@@ -56,12 +68,12 @@ model {
   tau_weather ~ student_t(3, 0, 2.5);
   tau_circuit ~ student_t(3, 0, 2.5);
 
-  theta_driver ~ normal(0, tau_driver);
-  theta_team ~ normal(0, tau_team);
-  to_vector(theta_driver_season) ~ normal(0, tau_driver_season);
-  to_vector(theta_team_season) ~ normal(0, tau_team_season);
-  weather_effect ~ normal(0, tau_weather);
-  circuit_effect ~ normal(0, tau_circuit);
+  theta_driver_raw ~ std_normal();
+  theta_team_raw ~ std_normal();
+  to_vector(theta_driver_season_raw) ~ std_normal();
+  to_vector(theta_team_season_raw) ~ std_normal();
+  weather_effect_raw ~ std_normal();
+  circuit_effect_raw ~ std_normal();
 
   // ROL likelihood
   int pos = 1; // current position in outcome vectors
