@@ -7,10 +7,10 @@ library(posterior)
 library(firatheme)
 
 f1_dat <- read_rds("dat/f1_dat.rds") %>% filter(finished)
-fit <- read_rds("fit/circuit.rds")
+fit <- read_rds("fit/basic.rds")
 
 # MCMC mixing ----
-mcmc_trace(fit$draws(c("tau_driver", "tau_driver_season", "tau_team", "tau_team_season", "tau_circuit"))) +
+mcmc_trace(fit$draws(c("tau_driver", "tau_driver_season", "tau_team", "tau_team_season"))) +
   theme_fira() +
   scale_colour_fira(guide = "none")
 ggsave("img/chains.png", width = 7, height = 10, bg = "white")
@@ -20,6 +20,8 @@ rhats <- rhat(fit)
 any(rhats[!is.nan(rhats)] > 1.01)
 
 # 2019 posterior predictive check ----
+# we need to be able to sample from gumbel distribution, see
+# http://www.glicko.net/research/multicompetitor.pdf , equation 2
 rgumbel <- function(n, theta) {
   sapply(theta, function(th) th-log(-log(runif(n))))
 }
@@ -46,7 +48,7 @@ idx_team <- pred_tab$constructor |> as.integer()
 
 driver_skill <- fit$draws("theta_driver")
 driver_form <- subset_draws(fit$draws("theta_driver_season"), "theta_driver_season\\[\\d+\\,6\\]", regex = TRUE)
-circuit_effect <- fit$draws("circuit_effect")
+#circuit_effect <- fit$draws("circuit_effect")
 team_skill <- fit$draws("theta_team")
 team_form <- subset_draws(fit$draws("theta_team_season"), "theta_team_season\\[\\d+\\,6\\]", regex = TRUE)
 
@@ -55,7 +57,7 @@ latent_skill <-
   as_draws_df(
     driver_skill[,,idx_driver] +
       driver_form[,,idx_driver] +
-      circuit_effect[,,idx_driver] +
+     # circuit_effect[,,idx_driver] +
       team_skill[,,idx_team] +
       team_form[,,idx_team]
   ) |>
