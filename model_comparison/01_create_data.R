@@ -13,7 +13,6 @@ f1_dat <-
     weather_type = as_factor(weather_type),
     circuit_type = as_factor(circuit_type)
   ) |>
-  filter() |>
   mutate(across(where(is.factor), fct_drop))
 
 # Compute classified indicator

@@ -2,7 +2,7 @@
 # Last edited 2021-05-16 by @vankesteren
 # Contents: MCMC validation, posterior predictive checks
 library(tidyverse)
-library(brms)
+library(bayesplot)
 library(firatheme)
 
 f1_dat <- read_rds("dat/f1_dat_finished.rds")
