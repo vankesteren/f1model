@@ -43,8 +43,8 @@ pred_tab <-
   select(driver, constructor, year) %>%
   distinct()
 
-idx_driver <- pred_tab$driver |> as.integer()
-idx_team <- pred_tab$constructor |> as.integer()
+idx_driver <- pred_tab$driver %>% as.integer()
+idx_team <- pred_tab$constructor %>% as.integer()
 
 driver_skill <- fit$draws("theta_driver")
 driver_form <- subset_draws(fit$draws("theta_driver_season"), "theta_driver_season\\[\\d+\\,6\\]", regex = TRUE)
@@ -60,24 +60,24 @@ latent_skill <-
      # circuit_effect[,,idx_driver] +
       team_skill[,,idx_team] +
       team_form[,,idx_team]
-  ) |>
+  ) %>%
   pivot_longer(
     starts_with("theta_driver"),
     names_to = c("driver_id"),
     names_pattern = "theta_driver\\[(\\d+)]",
     names_transform = as.integer
-  ) |>
-  mutate(driver_name = levels(f1_dat |> pull(driver))[driver_id]) |>
-  select(.draw, driver_name, value) |>
+  ) %>%
+  mutate(driver_name = levels(f1_dat %>% pull(driver))[driver_id]) %>%
+  select(.draw, driver_name, value) %>%
   mutate(performance = rgumbel(1, value))
 
 
 # TODO: make pp check on a per-race basis, not all races have 20 competitors!
 yrep <-
-  latent_skill |>
-  group_by(.draw) |>
-  summarize(driver_name = driver_name, .draw = .draw, position = rank(-performance)) |>
-  ungroup() |>
+  latent_skill %>%
+  group_by(.draw) %>%
+  summarize(driver_name = driver_name, .draw = .draw, position = rank(-performance)) %>%
+  ungroup() %>%
   mutate(origin = "simulated")
 
 y <-
@@ -86,7 +86,7 @@ y <-
   select(driver_name = driver, position) %>%
   mutate(origin = "observed")
 
-bind_rows(y, yrep) |>
+bind_rows(y, yrep) %>%
   ggplot(aes(x = factor(position), fill = origin, group = origin)) +
   geom_bar(aes(y = after_stat(prop)), position = position_dodge(preserve = "single")) +
   facet_wrap(~factor(driver_name, levels = ordered_levels)) +
