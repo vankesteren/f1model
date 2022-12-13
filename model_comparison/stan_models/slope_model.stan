@@ -24,10 +24,10 @@ data {
 }
 
 parameters {
-  vector[num_drivers] theta_driver_intercept;
-  vector[num_teams] theta_team_intercept;
-  vector[num_drivers] theta_driver_slope;
-  vector[num_teams] theta_team_slope;
+  vector[num_drivers] theta_driver_intercept_raw;
+  vector[num_teams] theta_team_intercept_raw;
+  vector[num_drivers] theta_driver_slope_raw;
+  vector[num_teams] theta_team_slope_raw;
 
   real<lower=0> tau_driver_intercept;
   real<lower=0> tau_team_intercept;
@@ -36,7 +36,16 @@ parameters {
 }
 
 transformed parameters {
+  // non-centered parametrization
+  vector[num_drivers] theta_driver_intercept;
+  vector[num_teams] theta_team_intercept;
+  vector[num_drivers] theta_driver_slope;
+  vector[num_teams] theta_team_slope;
 
+  theta_driver_intercept = tau_driver_intercept*theta_driver_intercept_raw;
+  theta_team_intercept = tau_team_intercept*theta_team_intercept_raw;
+  theta_driver_slope = tau_driver_slope*theta_driver_slope_raw;
+  theta_team_slope = tau_team_slope*theta_team_slope_raw;
 }
 
 model {
@@ -46,10 +55,10 @@ model {
   tau_driver_slope ~ student_t(3, 0, 2.5);
   tau_team_slope ~ student_t(3, 0, 2.5);
 
-  theta_driver_intercept ~ normal(0, tau_driver_intercept);
-  theta_team_intercept ~ normal(0, tau_team_intercept);
-  theta_driver_slope ~ normal(0, tau_driver_slope);
-  theta_team_slope ~ normal(0, tau_team_slope);
+  theta_driver_intercept_raw ~ std_normal();
+  theta_team_intercept_raw ~ std_normal();
+  theta_driver_slope_raw ~ std_normal();
+  theta_team_slope_raw ~ std_normal();
 
   // ROL likelihood
   int pos = 1; // current position in outcome vectors

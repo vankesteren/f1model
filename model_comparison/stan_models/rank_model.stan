@@ -24,10 +24,10 @@ data {
 }
 
 parameters {
-  vector[num_drivers] theta_driver;
-  vector[num_teams] theta_team;
-  matrix[num_drivers, num_seasons] theta_driver_season;
-  matrix[num_teams, num_seasons] theta_team_season;
+  vector[num_drivers] theta_driver_raw;
+  vector[num_teams] theta_team_raw;
+  matrix[num_drivers, num_seasons] theta_driver_season_raw;
+  matrix[num_teams, num_seasons] theta_team_season_raw;
 
   real<lower=0> tau_driver;
   real<lower=0> tau_team;
@@ -36,7 +36,16 @@ parameters {
 }
 
 transformed parameters {
+  // non-centered parametrization
+  vector[num_drivers] theta_driver;
+  vector[num_teams] theta_team;
+  matrix[num_drivers, num_seasons] theta_driver_season;
+  matrix[num_teams, num_seasons] theta_team_season;
 
+  theta_driver = tau_driver * theta_driver_raw;
+  theta_team = tau_team * theta_team_raw;
+  theta_driver_season = tau_driver_season * theta_driver_season_raw;
+  theta_team_season = tau_team_season * theta_team_season_raw;
 }
 
 model {
@@ -46,10 +55,10 @@ model {
   tau_driver_season ~ student_t(3, 0, 2.5);
   tau_team_season ~ student_t(3, 0, 2.5);
 
-  theta_driver ~ normal(0, tau_driver);
-  theta_team ~ normal(0, tau_team);
-  to_vector(theta_driver_season) ~ normal(0, tau_driver_season);
-  to_vector(theta_team_season) ~ normal(0, tau_team_season);
+  theta_driver_raw ~ std_normal();
+  theta_team_raw ~ std_normal();
+  to_vector(theta_driver_season_raw) ~ std_normal();
+  to_vector(theta_team_season_raw) ~ std_normal();
 
   // ROL likelihood
   int pos = 1; // current position in outcome vectors
@@ -69,3 +78,23 @@ model {
 
 }
 
+
+generated quantities {
+  // compute log_likelihood again!
+  vector[num_races] log_lik;
+  int pos = 1;
+  for (k in 1:num_races) {
+    int m_k = num_entrants[k];
+    int s = season_id[k];
+
+    array[m_k] int driver_idx = segment(ranked_driver_ids, pos, m_k);
+    array[m_k] int team_idx = segment(ranked_team_ids, pos, m_k);
+
+    vector[m_k] driver_skills = theta_driver[driver_idx] + col(theta_driver_season, s)[driver_idx];
+    vector[m_k] team_skills = theta_team[team_idx] + col(theta_team_season, s)[team_idx];
+
+    log_lik[k] = rank_ordered_logit(driver_skills + team_skills, m_k);
+    pos = pos + m_k;
+  }
+
+}

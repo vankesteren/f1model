@@ -30,7 +30,7 @@ beta_fit$save_object("model_comparison/fits/beta_fit.rds")
 # ROL model ----
 # rank-ordered logit implementation
 
-rank_mod <- cmdstan_model("model_comparison/rank_model.stan")
+rank_mod <- cmdstan_model("model_comparison/stan_models/rank_model.stan")
 
 stan_data_rank <- list(
   num_obs           = f1_dat |> nrow(),

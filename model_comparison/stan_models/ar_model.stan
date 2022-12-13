@@ -24,13 +24,10 @@ data {
 }
 
 parameters {
-  // mean parameters
-  vector[num_drivers] theta_driver;
-  vector[num_teams] theta_team;
-
-  // form parameters
-  matrix[num_drivers, num_seasons] theta_driver_season;
-  matrix[num_teams, num_seasons] theta_team_season;
+  vector[num_drivers] theta_driver_raw;
+  vector[num_teams] theta_team_raw;
+  matrix[num_drivers, num_seasons] theta_driver_season_raw;
+  matrix[num_teams, num_seasons] theta_team_season_raw;
 
   // autoregressive parameters
   vector<lower=-1, upper=1>[num_drivers] ar_driver;
@@ -43,6 +40,17 @@ parameters {
 }
 
 transformed parameters {
+    // non-centered parametrization
+  vector[num_drivers] theta_driver;
+  vector[num_teams] theta_team;
+  matrix[num_drivers, num_seasons] theta_driver_season;
+  matrix[num_teams, num_seasons] theta_team_season;
+
+  theta_driver = tau_driver * theta_driver_raw;
+  theta_team = tau_team * theta_team_raw;
+  theta_driver_season = tau_driver_season * theta_driver_season_raw;
+  theta_team_season = tau_team_season * theta_team_season_raw;
+
   matrix[num_drivers, num_seasons] driver_skill;
   matrix[num_teams, num_seasons] team_contribution;
 
@@ -67,10 +75,10 @@ model {
   tau_driver_season ~ student_t(3, 0, 2.5);
   tau_team_season ~ student_t(3, 0, 2.5);
 
-  theta_driver ~ normal(0, tau_driver);
-  theta_team ~ normal(0, tau_team);
-  to_vector(theta_driver_season) ~ normal(0, tau_driver_season);
-  to_vector(theta_team_season) ~ normal(0, tau_team_season);
+  theta_driver_raw ~ std_normal();
+  theta_team_raw ~ std_normal();
+  to_vector(theta_driver_season_raw) ~ std_normal();
+  to_vector(theta_team_season_raw) ~ std_normal();
 
   ar_driver ~ normal(0, 2);
   ar_team ~ normal(0, 2);
