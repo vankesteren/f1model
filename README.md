@@ -4,15 +4,15 @@
 
 Repository containing code, data & presentation accompanying the manuscript _Bayesian Analysis of Formula One Race Results: Disentangling Driver Skill and Constructor Advantage_. 
 
-> Note: [`tag:v1.0`](https://github.com/vankesteren/f1model/releases/tag/v1.0) used Beta regression via the `brms` package rather than the current `cmdstanr` rank-ordered logit implementation. The [`model_comparison`](./model_comparison/) folder compares the old and the current implementation.
+> Note: version [`v1.0`](https://github.com/vankesteren/f1model/releases/tag/v1.0) used Beta regression via the `brms` package rather than the current `cmdstanr` rank-ordered logit implementation. The [`model_comparison`](./model_comparison/) folder compares the old and the current implementation.
 
 The scripts contain the following:
 
 | Script                                     | Contents                                                         |
 | :----------------------------------------- | :--------------------------------------------------------------- |
 | [`01_prep_data.R`](./01_prep_data.R)       | Data preparation, data joining from database `f1db_csv`          |
-| [`02_process_data.R`](./02_process_data.R) | Data processing, status filtering, outcome computation, some EDA |
-| [`03_model.R`](./03_model.R)               | Creating and estimating models                                   |
+| [`02_eda.R`](./02_eda.R)                   | Some visualisation and exploratory data analysis                 |
+| [`03_model.R`](./03_model.R)               | Creating and estimating models with different predictors         |
 | [`04_compare.R`](./04_compare.R)           | Performing model comparison                                      |
 | [`05_check.R`](./05_check.R)               | MCMC validation, posterior predictive checks                     |
 | [`06_infer.R`](./06_infer.R)               | Inferences using posteriors of parameters                        |
