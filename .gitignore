@@ -34,3 +34,12 @@ vignettes/*.pdf
 
 # Shiny token, see https://shiny.rstudio.com/articles/shinyapps.html
 rsconnect/
+
+# Stan executables
+stan_models/*.exe
+model_comparison/stan_models/*.exe
+model_comparison/stan_models/old/*.exe
+
+# stan fits
+model_comparison/fits/*.rds
+

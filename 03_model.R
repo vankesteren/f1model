@@ -2,71 +2,44 @@
 # Last edited 2021-05-16 by @vankesteren
 # Contents: Creating and estimating models
 library(tidyverse)
-library(brms)
+library(cmdstanr)
 
-# read data
-f1_dat_finished  <- read_rds("dat/f1_dat_finished.rds")
+# read & prepare stan data
+f1_dat <-
+  read_rds("dat/f1_dat.rds") %>%
+  filter(finished)
+
+stan_data <- list(
+  num_obs           = f1_dat %>% nrow(),
+  num_drivers       = f1_dat %>% pull(driver) %>% nlevels(),
+  num_teams         = f1_dat %>% pull(constructor) %>% nlevels(),
+  num_races         = f1_dat %>% group_by(year, round) %>% n_groups(),
+  num_seasons       = f1_dat %>% group_by(year) %>% n_groups(),
+  ranked_driver_ids = f1_dat %>% arrange(year, round, position) %>% pull(driver) %>% as.integer(),
+  ranked_team_ids   = f1_dat %>% arrange(year, round, position) %>% pull(constructor) %>% as.integer(),
+  num_entrants      = f1_dat %>% group_by(year, round) %>% summarize(count = n()) %>% pull(count),
+  season_id         = f1_dat %>% group_by(year, round) %>% summarize(y = factor(first(year))) %>% pull(y) %>% as.integer(),
+  wet_weather       = f1_dat %>% group_by(year, round) %>% summarize(w = first(weather_type)) %>% pull(w) %>% as.integer() - 1L,
+  prm_circuit       = f1_dat %>% group_by(year, round) %>% summarize(c = first(circuit_type)) %>% pull(c) %>% as.integer() - 1L
+)
 
 # basic model
-fit_basic <- brm(
-  formula = prop_trans ~ 0 + (1 | driver) + (1 | driver:year) + (1 | constructor) + (1 | constructor:year),
-  family  = Beta(),
-  data    = f1_dat_finished,
-  backend = "cmdstanr",
-  chains  = 4,
-  cores   = 4,
-  threads = 3,
-  warmup  = 1000,
-  iter    = 3500
-)
-
-summary(fit_basic)
-write_rds(fit_basic, "fit/fit_basic.rds")
+mod_basic <- cmdstan_model("stan_models/basic_model.stan")
+fit_basic <- mod_basic$sample(stan_data, chains = 8, parallel_chains = 8, iter_sampling = 1000)
+fit_basic$save_object("fit/basic.rds")
 
 # weather model
-fit_weather <- brm(
-  formula = prop_trans ~ 0 + (1 + weather_type | driver) + (1 | driver:year) + (1 | constructor) + (1 | constructor:year),
-  family  = Beta(),
-  data    = f1_dat_finished,
-  backend = "cmdstanr",
-  chains  = 4,
-  cores   = 4,
-  threads = 3,
-  warmup  = 1000,
-  iter    = 3500
-)
-
-summary(fit_weather)
-write_rds(fit_weather, "fit/fit_weather.rds")
+mod_weather <- cmdstan_model("stan_models/weather_model.stan")
+fit_weather <- mod_weather$sample(stan_data, chains = 8, parallel_chains = 8, iter_sampling = 1000)
+fit_weather$save_object("fit/weather.rds")
 
 # circuit type model
-fit_circuit <- brm(
-  formula = prop_trans ~ 0 + (1 | driver) + (1 | driver:year) + (1 + circuit_type | constructor) + (1 | constructor:year),
-  family  = Beta(),
-  data    = f1_dat_finished,
-  backend = "cmdstanr",
-  chains  = 4,
-  cores   = 4,
-  threads = 3,
-  warmup  = 1000,
-  iter    = 3500
-)
-
-summary(fit_circuit)
-write_rds(fit_circuit, "fit/fit_circuit.rds")
+mod_circuit <- cmdstan_model("stan_models/circuit_model.stan")
+fit_circuit <- mod_circuit$sample(stan_data, chains = 8, parallel_chains = 8, iter_sampling = 1000)
+fit_circuit$save_object("fit/circuit.rds")
 
 # weather + circuit type model
-fit_weather_circuit <- brm(
-  formula = prop_trans ~ 0 + (1 + weather_type | driver) + (1 | driver:year) + (1 + circuit_type | constructor) + (1 | constructor:year),
-  family  = Beta(),
-  data    = f1_dat_finished,
-  backend = "cmdstanr",
-  chains  = 4,
-  cores   = 4,
-  threads = 3,
-  warmup  = 1000,
-  iter    = 3500
-)
-
-summary(fit_weather_circuit)
-write_rds(fit_weather_circuit, "fit/fit_weather_circuit.rds")
+# weather model
+mod_all <- cmdstan_model("stan_models/weather_circuit_model.stan")
+fit_all <- mod_all$sample(stan_data, chains = 8, parallel_chains = 8, iter_sampling = 1000)
+fit_all$save_object("fit/weather_circuit.rds")
