@@ -6,7 +6,7 @@ library(cmdstanr)
 
 
 # Load data ----
-f1_dat <- read_rds("model_comparison/dat/f1_dat.rds")
+f1_dat <- read_rds("dat/f1_dat.rds") |> filter(finished)
 
 # Beta model ----
 # translated from brms into stan
@@ -24,12 +24,10 @@ stan_data_beta <- list(
 )
 
 beta_fit <- beta_mod$sample(stan_data_beta, parallel_chains = 4, max_treedepth = 14, iter_sampling = 2000)
-
 beta_fit$save_object("model_comparison/fits/beta_fit.rds")
 
 # ROL model ----
 # rank-ordered logit implementation
-
 rank_mod <- cmdstan_model("model_comparison/stan_models/rank_model.stan")
 
 stan_data_rank <- list(
@@ -45,18 +43,14 @@ stan_data_rank <- list(
 )
 
 rank_fit <- rank_mod$sample(stan_data_rank, parallel_chains = 4, iter_sampling = 2000)
-
 rank_fit$save_object("model_comparison/fits/rank_fit.rds")
 
 # ROL model with AR ----
-
 ar_mod <- cmdstan_model("model_comparison/stan_models/ar_model.stan")
 ar_fit <- ar_mod$sample(stan_data_rank, parallel_chains = 4, iter_sampling = 2000)
 ar_fit$save_object("model_comparison/fits/ar_fit.rds")
 
-
 # ROL model with simple slopes ----
-
 slope_mod <- cmdstan_model("model_comparison/stan_models/slope_model.stan")
 slope_fit <- slope_mod$sample(stan_data_rank, parallel_chains = 4, iter_sampling = 2000)
 slope_fit$save_object("model_comparison/fits/slope_fit.rds")

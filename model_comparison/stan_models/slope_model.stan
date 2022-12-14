@@ -78,3 +78,21 @@ model {
 
 }
 
+generated quantities {
+  // compute log_likelihood again!
+  vector[num_races] log_lik;
+  int pos = 1; // current position in outcome vectors
+  for (k in 1:num_races) {
+    int m_k = num_entrants[k];
+    int s = season_id[k];
+
+    array[m_k] int driver_idx = segment(ranked_driver_ids, pos, m_k);
+    array[m_k] int team_idx = segment(ranked_team_ids, pos, m_k);
+
+    vector[m_k] driver_skills = theta_driver_intercept[driver_idx] + (s-5)*theta_driver_slope[driver_idx];
+    vector[m_k] team_skills = theta_team_intercept[team_idx] + (s-5)*theta_team_slope[team_idx];
+
+    log_lik[k] = rank_ordered_logit(driver_skills + team_skills, m_k);
+    pos = pos + m_k;
+  }
+}

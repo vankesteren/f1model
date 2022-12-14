@@ -97,3 +97,17 @@ model {
 
 }
 
+generated quantities {
+  // compute log_likelihood again!
+  vector[num_races] log_lik;
+  int pos = 1;
+  for (k in 1:num_races) {
+    int m_k = num_entrants[k];
+    int s = season_id[k];
+    vector[m_k] driver_skills = col(driver_skill, s)[segment(ranked_driver_ids, pos, m_k)];
+    vector[m_k] team_skills = col(team_contribution, s)[segment(ranked_team_ids, pos, m_k)];
+    log_lik[k] = rank_ordered_logit(driver_skills + team_skills, m_k);
+    pos = pos + m_k;
+  }
+}
+
