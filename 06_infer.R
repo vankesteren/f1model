@@ -1,33 +1,39 @@
 # Code accompanying the manuscript "Bayesian Analysis of Formula One Race Results"
-# Last edited 2021-05-16 by @vankesteren
+# Last edited 2022-12-14 by @vankesteren
 # Contents: Inferences using posteriors of parameters
 library(tidyverse)
-library(brms)
+library(cmdstanr)
 library(firatheme)
 library(patchwork)
 library(glue)
 
-fit <- read_rds("fit/fit_basic.rds")
+fit <- read_rds("fit/basic.rds")
+f1_dat <- read_rds("dat/f1_dat.rds") %>% filter(finished)
 
 # Inference about driver skill ----
 drivers_focus <- c("hamilton", "bottas", "norris", "sainz", "leclerc", "max_verstappen", "perez", "alonso",
                    "raikkonen", "giovinazzi", "vettel", "gasly")
 
-driver_mean <- as_draws_df(fit, variable = "r_driver\\[.+Intercept]", regex = TRUE) %>% select(-.chain, -.iteration)
-driver_form <- as_draws_df(fit, variable = "r_driver:year\\[.+Intercept]", regex = TRUE) %>% select(-.chain,-.iteration)
+driver_mean <- fit$draws("theta_driver", format = "df") %>% select(-.chain, -.iteration)
+driver_form <- fit$draws("theta_driver_season", format = "df") %>% select(-.chain,-.iteration)
 
+first_year_per_driver <-
+  f1_dat %>%
+  group_by(driver) %>%
+  summarize(first_year = first(year))
 
 driver_mean_long <-
   driver_mean  %>%
-  pivot_longer(-.draw, names_to = "Driver", values_to = "Skill",
-               names_pattern = "\\[(\\w+),") %>%
-  mutate(Driver = as_factor(Driver))
+  pivot_longer(-.draw, names_to = "driver_id", values_to = "Skill",
+               names_pattern = "\\[(\\d+)]", names_transform = as.integer) %>%
+  mutate(Driver = as_factor(levels(f1_dat$driver)[driver_id]))
 
 driver_form_long <-
   driver_form %>%
-  pivot_longer(-.draw, names_to = c("Driver", "Year"), values_to = "Form",
-               names_pattern = "\\[(\\w+)_([0-9]{4}),") %>%
-  mutate(Driver = as_factor(Driver), Year = as.integer(Year))
+  pivot_longer(-.draw, names_to = c("driver_id", "season_num"), values_to = "Form",
+               names_pattern = "\\[(\\d+),(\\d+)\\]", names_transform = as.integer) %>%
+  mutate(Driver = as_factor(levels(f1_dat$driver)[driver_id]),
+         Year = season_num + 2013)
 
 driver_samples <-
   left_join(driver_form_long, driver_mean_long, by = c("Driver", ".draw")) %>%
@@ -40,8 +46,10 @@ driver_skill_summary <-
     est = mean(skill_yr),
     lower = quantile(skill_yr, 0.055),
     upper = quantile(skill_yr, 0.945),
-  )
-
+  ) %>%
+  left_join(first_year_per_driver, by = c("Driver" = "driver")) %>%
+  filter(Year >= first_year) %>%
+  select(-first_year)
 
 plt_skill_trajectory <-
   driver_skill_summary %>%
@@ -62,10 +70,17 @@ plt_skill_trajectory <-
 
 ggsave("img/plt_skill_trajectories.png", plot = plt_skill_trajectory, width = 12, height = 9, bg = "white")
 
+drivers_2021 <-
+  f1_dat %>%
+  filter(finished, year == 2021) %>%
+  pull(driver) %>%
+  unique() %>%
+  as.character()
+
 plt_driver_skill_2021 <-
   driver_skill_summary %>%
   ungroup() %>%
-  filter(Year == 2021) %>%
+  filter(Year == 2021, Driver %in% drivers_2021) %>%
   mutate(Driver = fct_reorder(Driver, est)) %>%
   ggplot(aes(y = Driver, x = est, xmin = lower, xmax = upper)) +
   geom_pointrange(colour = firaCols[3]) +
@@ -81,25 +96,30 @@ ggsave("img/plt_skill_2021.png", plot = plt_driver_skill_2021, width = 9, height
 # Inference about constructor advantage ----
 constructors_focus <- c("ferrari", "haas", "mclaren", "mercedes", "red_bull", "williams")
 
-constructor_mean <- as_draws_df(fit, variable = "r_constructor\\[.+Intercept]", regex = TRUE) %>% select(-.chain, -.iteration)
-constructor_form <- as_draws_df(fit, variable = "r_constructor:year\\[.+Intercept]", regex = TRUE) %>% select(-.chain,-.iteration)
+constructor_mean <- fit$draws("theta_team", format = "df") %>% select(-.chain, -.iteration)
+constructor_form <- fit$draws("theta_team_season", format = "df") %>% select(-.chain,-.iteration)
 
+first_year_per_constructor <-
+  f1_dat %>%
+  group_by(constructor) %>%
+  summarize(first_year = first(year))
 
 constructor_mean_long <-
   constructor_mean  %>%
-  pivot_longer(-.draw, names_to = "Constructor", values_to = "Advantage",
-               names_pattern = "\\[(\\w+),") %>%
-  mutate(Constructor = as_factor(Constructor))
+  pivot_longer(-.draw, names_to = "constructor_id", values_to = "Advantage",
+               names_pattern = "\\[(\\d+)]", names_transform = as.integer) %>%
+  mutate(Constructor = as_factor(levels(f1_dat$constructor)[constructor_id]))
 
 constructor_form_long <-
   constructor_form %>%
-  pivot_longer(-.draw, names_to = c("Constructor", "Year"), values_to = "Form",
-               names_pattern = "\\[(\\w+)_([0-9]{4}),") %>%
-  mutate(Constructor = as_factor(Constructor), Year = as.integer(Year))
+  pivot_longer(-.draw, names_to = c("constructor_id", "season_num"), values_to = "Form",
+               names_pattern = "\\[(\\d+),(\\d+)\\]", names_transform = as.integer) %>%
+  mutate(Constructor = as_factor(levels(f1_dat$constructor)[constructor_id]),
+         Year = season_num + 2013)
 
 constructor_samples <-
   left_join(constructor_form_long, constructor_mean_long, by = c("Constructor", ".draw")) %>%
-  mutate(advantage_yr = Form + Advantage)
+  mutate(advantage_yr = Advantage + Form)
 
 constructor_advantage_summary <-
   constructor_samples %>%
@@ -108,7 +128,11 @@ constructor_advantage_summary <-
     est = mean(advantage_yr),
     lower = quantile(advantage_yr, 0.055),
     upper = quantile(advantage_yr, 0.945),
-  )
+  ) %>%
+  left_join(first_year_per_constructor, by = c("Constructor" = "constructor")) %>%
+  filter(Year >= first_year) %>%
+  select(-first_year)
+
 
 plt_advantage_trajectory <-
   constructor_advantage_summary %>%

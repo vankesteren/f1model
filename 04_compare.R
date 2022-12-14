@@ -41,5 +41,5 @@ xtable::xtable(loo_results)
 # Circuit + Weather -2.7       2.2
 # Weather           -4.7       6.3
 
-# Circuit works best
+# Circuit works best, but not that different from basic
 
