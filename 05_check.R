@@ -14,8 +14,9 @@ draws <- fit$draws()
 draws %>%
   mcmc_trace(regex_pars = "tau") +
   theme_fira() +
-  scale_colour_fira(guide = "none")
-ggsave("img/chains.png", width = 10, height = 6, bg = "white")
+  scale_colour_fira(guide = "none") +
+  facet_wrap(vars(parameter), scales = "free", ncol = 1)
+ggsave("img/chains.png", width = 6, height = 8, bg = "white")
 
 # Rhat ----
 rhats <- apply(draws, 3, rhat)
@@ -155,3 +156,31 @@ ggsave("img/pp_check_rank_2019.png", width = 15, height = 12, bg = "white")
 # Posterior predictive check 2021 ----
 pp_check_plot(2021, nsim = 1500)
 ggsave("img/pp_check_rank_2021.png", width = 15, height = 12, bg = "white")
+
+# Expected points ----
+# posterior prediction of expected average points per race in a season
+yrep <- simulate_season(2021, 8000)
+
+transform_points <- function(pos) {
+  points_lut <- c(25, 18, 15, 12, 10, 8, 6, 4, 2, 1, 0)
+  points_lut[pmin(pos, length(points_lut))]
+}
+
+expected_points <-
+  yrep |>
+  mutate(points = transform_points(position)) |>
+  group_by(.draw, driver) |>
+  summarise(constructor = first(constructor), total = sum(points)) |>
+  group_by(driver) |>
+  summarise(constructor = first(constructor), exp_points = mean(total) / 22, lower = quantile(total, 0.045)  / 22, upper = quantile(total, 0.955)  / 22) |>
+  arrange(-exp_points)
+
+observed_points <-
+  f1_dat %>%
+  filter(year == 2021) %>%
+  mutate(points = transform_points(position)) |>
+  group_by(driver) |>
+  summarise(constructor = first(constructor), obs_points = sum(points) / 22)
+
+left_join(expected_points, observed_points)
+
