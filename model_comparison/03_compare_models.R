@@ -54,7 +54,7 @@ tibble(
   scale_fill_fira() +
   theme(legend.position = "top")
 
-ggsave("model_comparison/img/variance.png", bg = "white", width = 9, height = 5)
+ggsave("model_comparison/img/variance_comparison.png", bg = "white", width = 9, height = 5)
 
 # Driver plots ----
 # beta model
@@ -264,7 +264,7 @@ loo_rank <- rank_fit$loo(cores = 10)
 loo_ar <- ar_fit$loo(cores = 10)
 loo_slope <- slope_fit$loo(cores = 10)
 
-loo_compare(list(rank = loo_rank, ar = loo_ar, slope = loo_slope))
+print(loo_compare(list(rank = loo_rank, ar = loo_ar, slope = loo_slope)), simplify = FALSE)
 
 # the slope model is clearly worse, the AR model is similar to the rank model
 
