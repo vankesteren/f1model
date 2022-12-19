@@ -167,19 +167,19 @@ transform_points <- function(pos) {
 }
 
 expected_points <-
-  yrep |>
-  mutate(points = transform_points(position)) |>
-  group_by(.draw, driver) |>
-  summarise(constructor = first(constructor), total = sum(points)) |>
-  group_by(driver) |>
-  summarise(constructor = first(constructor), exp_points = mean(total) / 22, lower = quantile(total, 0.045)  / 22, upper = quantile(total, 0.955)  / 22) |>
+  yrep %>%
+  mutate(points = transform_points(position)) %>%
+  group_by(.draw, driver) %>%
+  summarise(constructor = first(constructor), total = sum(points)) %>%
+  group_by(driver) %>%
+  summarise(constructor = first(constructor), exp_points = mean(total) / 22, lower = quantile(total, 0.045)  / 22, upper = quantile(total, 0.955)  / 22) %>%
   arrange(-exp_points)
 
 observed_points <-
   f1_dat %>%
   filter(year == 2021) %>%
-  mutate(points = transform_points(position)) |>
-  group_by(driver) |>
+  mutate(points = transform_points(position)) %>%
+  group_by(driver) %>%
   summarise(constructor = first(constructor), obs_points = sum(points) / 22)
 
 left_join(expected_points, observed_points)
