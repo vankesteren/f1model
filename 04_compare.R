@@ -28,7 +28,13 @@ loo_results <- loo_compare(
   )
 )
 
-loo_results
+print(loo_results, simplify = FALSE)
+
+#                   elpd_diff se_diff elpd_loo se_elpd_loo p_loo   se_p_loo looic   se_looic
+# Circuit               0.0       0.0 -3990.7     84.0       206.3    14.4   7981.3   167.9
+# Basic                -2.3       6.1 -3993.0     83.7       187.1    12.6   7986.0   167.4
+# Circuit + Weather    -2.7       2.2 -3993.3     84.4       217.1    15.3   7986.6   168.8
+# Weather              -4.7       6.3 -3995.3     84.0       197.2    13.7   7990.7   168.1
 
 write_rds(loo_results, "fit/loo_results.rds")
 
