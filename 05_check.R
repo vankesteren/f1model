@@ -20,7 +20,11 @@ ggsave("img/chains.png", width = 6, height = 8, bg = "white")
 
 # Rhat ----
 rhats <- apply(draws, 3, rhat)
-all(rhats < 1.01, na.rm = TRUE)
+range(rhats, na.rm = TRUE)
+
+# ESS ----
+esss <- apply(draws, 3, ess_bulk)
+range(esss, na.rm = TRUE)
 
 # Posterior predictive check code ----
 # we need to be able to sample from gumbel distribution, see
@@ -134,26 +138,30 @@ pp_check_plot <- function(race_year, nsim = 200) {
     ggplot(aes(x = factor(position), fill = origin, group = origin)) +
     geom_bar(aes(y = after_stat(prop)), position = position_dodge(preserve = "single")) +
     facet_wrap(~factor(driver, levels = ordered_levels)) +
-    theme_linedraw() +
     theme(legend.position = "top", axis.text.x = element_text(angle = 90, hjust = 1)) +
     labs(
       title = paste(race_year, "season posterior predictive check"),
       x = "Position",
       y = "",
       fill = ""
-    )
+    ) +
+    theme_fira() +
+    scale_fill_fira()
 }
 
 
 # Posterior predictive check 2015 ----
+set.seed(45)
 pp_check_plot(2015, nsim = 1500)
 ggsave("img/pp_check_rank_2015.png", width = 15, height = 12, bg = "white")
 
 # Posterior predictive check 2019 ----
+set.seed(45)
 pp_check_plot(2019, nsim = 1500)
 ggsave("img/pp_check_rank_2019.png", width = 15, height = 12, bg = "white")
 
 # Posterior predictive check 2021 ----
+set.seed(45)
 pp_check_plot(2021, nsim = 1500)
 ggsave("img/pp_check_rank_2021.png", width = 15, height = 12, bg = "white")
 
