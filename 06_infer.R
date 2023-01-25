@@ -184,43 +184,30 @@ ggsave("img/plt_advantage_avg.png", plot = plt_advantage_avg, width = 9, height 
 
 # Driver versus constructor contributions ----
 # random effects standard deviation summary
-sfit <- summary(fit, prob = 0.89)
+sd_driver <- fit$draws("tau_driver")
+sd_driver_season <- fit$draws("tau_driver_season")
+sd_team <- fit$draws("tau_team")
+sd_team_season <- fit$draws("tau_team_season")
+
+smry <- function(x) c(mean(x), sd(x), quantile(x, c(0.045, 0.955)))
 ranef_summary <- rbind(
-  "constructor" = sfit$random$constructor,
-  "constructor form" = sfit$random$`constructor:year`,
-  "driver" = sfit$random$driver,
-  "driver form" = sfit$random$`driver:year`
-)[1:4, 1:4]
+  "constructor"      = smry(sd_team),
+  "constructor form" = smry(sd_team_season),
+  "driver"           = smry(sd_driver),
+  "driver form"      = smry(sd_driver_season)
+)
+colnames(ranef_summary) <- c("Estimate", "Est.Error", "Lower", "Upper")
 xtable::xtable(ranef_summary)
 
+# variances
+var_driver <- rank_sd_driver^2 + rank_sd_driver_season^2
+var_team <- rank_sd_team^2 + rank_sd_team_season^2
+
 # how much of variance is due to car?
-colSums(ranef_summary[1:2,]^2)/colSums(ranef_summary^2)
+prop_team <- var_team / (var_team + var_driver)
+smry(prop_team)
 
 # and how much due to the driver?
-colSums(ranef_summary[3:4,]^2)/colSums(ranef_summary^2)
+prop_driver <- var_driver / (var_team + var_driver)
+smry(prop_driver)
 
-
-
-# Overall performance in 2021 ----
-grid_2021 <-
-  f1_dat %>%
-  filter(year == 2021, driver != "kubica") %>% # kubica only did one race
-  select(driver, constructor, year) %>%
-  distinct() %>%
-  arrange(constructor)
-
-pp_2021 <- posterior_predict(fit, grid_2021)
-pp_2021_summary <-
-  pp_2021 %>%
-  as_tibble(.name_repair = "minimal") %>%
-  set_names(grid_2021$driver) %>%
-  pivot_longer(everything(), names_to = "driver") %>%
-  group_by(driver) %>%
-  summarise(est = mean(value), lower = quantile(value, 0.045), upper = quantile(value, 0.955)) %>%
-  left_join(grid_2021) %>%
-  select(driver, constructor, performance = est, lower, upper) %>%
-  arrange(-performance)
-
-xtable::xtable(pp_2021_summary, digits = 3)
-
-ggsave("img/plt_performance_2021.png", width = 6, height = 9, bg = "white")
