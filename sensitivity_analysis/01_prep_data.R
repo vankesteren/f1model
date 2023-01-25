@@ -6,8 +6,7 @@
 library(tidyverse)
 
 # read data
-f1_dat <-
-  read_rds("dat/f1_dat.rds")
+f1_dat <-  read_rds("dat/f1_dat.rds")
 
 # create function for different finishing indicators
 compute_classified <- function(status, exp) {
@@ -18,12 +17,16 @@ compute_classified <- function(status, exp) {
 }
 
 # different expressions to indicate who classified as finishing + position
-# 1. = only drivers who truly finished are classified
-# 2. = 1 + anyone above the last person still running (finished or +n laps is classified)
-# 3. = 2 + drivers who had an accident or collision
-exp <- list(exp1 = expr(status == "Finished"),
-            exp2 = expr(status == "Finished" | str_starts(status, "\\+")),
-            exp3 = expr(status == "Finished" | str_starts(status, "\\+") | str_starts(status, "Acc|Coll")))
+# 1. = Not removing any results, i.e., ranking unfinished competitors based on race distance
+# 2. = Removing only car-related non-finishes and ranking the driver-related non-finishes as normal
+# 3. = Removing only driver-related non-finishes and ranking the car-related non-finishes as normal
+# 4. = only ranking finished competitiors (i.e orignal dataset)
+
+# expressions for datasets. First one is generic, meant to simply mark all rows as TRUE
+exp <- list(exp1 = expr(status != "smth"),
+            exp2 = expr(status == "Finished" | str_starts(status, "\\+|Acc|Coll|Dis|With|Reti|Excl|Spun")),
+            exp3 = expr(!str_starts(status, "\\+|Acc|Coll|Dis|With|Reti|Excl|Spun")),
+            exp3 = expr(status == "Finished"))
 
 for(i in 1:length(exp)){
 
