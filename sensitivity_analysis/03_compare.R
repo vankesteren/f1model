@@ -67,7 +67,7 @@ first_year_per_driver <-
 driver_data_sum <-
   driver_data |>
   group_by(model, driver_name, season_num) |>
-  #filter(driver_name %in% drivers_focus) |>
+  filter(driver_name %in% drivers_focus) |>
   summarize(y = mean(value), ymin = quantile(value, 0.055), ymax = quantile(value, 0.945)) |>
   left_join(first_year_per_driver, by = c("driver_name" = "driver")) %>%
   filter(season_num + 2013 >= first_year)
