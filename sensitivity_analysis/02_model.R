@@ -7,14 +7,16 @@ library(tidyverse)
 library(cmdstanr)
 
 # read & prepare stan data
-files <- list.files("sensitivity_analysis/data/")
+files <- list.files("sensitivity_analysis/data/", full.names = TRUE)
 
-for(i in 1:length(files)){
+for (filename in files) {
+  # get name
+  name <- str_extract(filename, "(?<=dat\\_)\\w+(?=\\.rds)")
 
-  f1_dat <-
-    read_rds(paste0("sensitivity_analysis/data/", files[i])) %>%
-    filter(finished)
+  # load file
+  f1_dat <- read_rds(filename)
 
+  # transform to stan data
   stan_data <- list(
     num_obs           = f1_dat %>% nrow(),
     num_drivers       = f1_dat %>% pull(driver) %>% nlevels(),
@@ -29,10 +31,10 @@ for(i in 1:length(files)){
     prm_circuit       = f1_dat %>% group_by(year, round) %>% summarize(c = first(circuit_type)) %>% pull(c) %>% as.integer() - 1L
   )
 
-  # basic model #1
-  mod_basic <- cmdstan_model("stan_models/basic_model.stan")
-  fit_basic <- mod_basic$sample(stan_data, chains = 8, parallel_chains = 8, iter_sampling = 1000)
-  fit_basic$save_object(paste0("sensitivity_analysis/fit/basic_", i, ".rds"))
+  # create model
+  mod <- cmdstan_model("stan_models/basic_model.stan")
+  fit <- mod$sample(stan_data, chains = 8, parallel_chains = 8, iter_sampling = 1250)
+  fit$save_object(paste0("sensitivity_analysis/fit/fit_", name, ".rds"))
 
 }
 
