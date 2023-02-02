@@ -67,7 +67,7 @@ first_year_per_driver <-
 driver_data_sum <-
   driver_data |>
   group_by(model, driver_name, season_num) |>
-  filter(driver_name %in% drivers_focus) |>
+  #filter(driver_name %in% drivers_focus) |>
   summarize(y = mean(value), ymin = quantile(value, 0.055), ymax = quantile(value, 0.945)) |>
   left_join(first_year_per_driver, by = c("driver_name" = "driver")) %>%
   filter(season_num + 2013 >= first_year)
@@ -89,11 +89,40 @@ driver_data_sum |>
     y = "Driver skill"
   )
 
-
-
 ggsave("sensitivity_analysis/img/driver_skills_comparison.png", bg = "white", width = 12, height = 8)
 
 
+drivers_2021 <-
+  f1_dat_finished %>%
+  filter(year == 2021) %>%
+  pull(driver) %>%
+  unique() %>%
+  as.character()
+
+fct_order <-
+  driver_data_sum |>
+  filter(model == "Only finishers retained", season_num + 2013 == 2021) |>
+  arrange(y) |>
+  pull(driver_name)
+
+
+driver_data_sum %>%
+  ungroup() %>%
+  filter(
+    season_num + 2013 == 2021,
+    driver_name %in% drivers_2021
+  ) %>%
+  mutate(driver_name = factor(driver_name, levels = fct_order)) %>%
+  ggplot(aes(y = driver_name, x = y, xmin = ymin, xmax = ymax, colour = model)) +
+  geom_pointrange(position = position_dodge(width = 0.5)) +
+  theme_fira() +
+  scale_colour_fira() +
+  labs(title = "2021 F1 driver skill sensitivity analysis",
+       x = "Skill (log odds ratio)",
+       y = "Driver",
+       colour = "Model")
+
+ggsave("sensitivity_analysis/img/driver_2021_comparison.png", bg = "white", width = 12, height = 8)
 
 # Team plots ----
 
@@ -137,14 +166,14 @@ team_data_sum <-
 
 # direct comparison
 team_data_sum |>
-  ggplot(aes(x = season_num, y = y, ymin = ymin, ymax = ymax, colour = model, fill = model)) +
+  ggplot(aes(x = season_num, y = y, ymin = ymin, ymax = ymax, colour = team_name, fill = team_name)) +
   geom_ribbon(alpha = .2, colour = NA) +
   geom_line() +
   geom_point() +
   theme_fira() +
-  scale_fill_fira() +
-  scale_colour_fira() +
-  facet_wrap(vars(team_name)) +
+  scale_fill_brewer(type = "qual", palette = 3) +
+  scale_colour_brewer(type = "qual", palette = 3) +
+  facet_wrap(vars(model)) +
   labs(
     title = "Sensitivity analysis for constructor advantage",
     colour = "Model", fill = "Model",
