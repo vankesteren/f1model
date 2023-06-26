@@ -16,6 +16,16 @@ drivers_focus <- c("hamilton", "bottas", "norris", "sainz", "leclerc", "max_vers
 
 teams_focus <- c("mercedes", "red_bull", "ferrari", "williams", "mclaren", "toro_rosso")
 
+recode_constructors <- c(
+  "Ferrari" = "ferrari",
+  "McLaren" = "mclaren",
+  "Mercedes" = "mercedes",
+  "Red Bull" = "red_bull",
+  "Toro Rosso" = "toro_rosso",
+  "Williams" = "williams"
+)
+
+
 beta_fit  <- read_rds("model_comparison/fits/beta_fit.rds")
 rank_fit  <- read_rds("model_comparison/fits/rank_fit.rds")
 ar_fit    <- read_rds("model_comparison/fits/ar_fit.rds")
@@ -87,13 +97,18 @@ beta_driver <-
 
 beta_driver |>
   filter(driver_name %in% drivers_focus) |>
+  ungroup() |>
+  mutate(
+    driver_name = fct_recode(driver_name, verstappen = "max_verstappen"),
+    driver_name = fct_relabel(driver_name, str_to_title)
+  ) |>
   ggplot(aes(x = season_num, y = y, ymin = ymin, ymax = ymax, colour = driver_name, fill = driver_name)) +
   geom_ribbon(alpha = .5, colour = NA) +
   geom_line() +
   geom_point() +
   theme_minimal() +
   facet_wrap(~as_factor(driver_name)) +
-  labs(title = "Beta model driver skills")
+  labs(title = "Beta model driver skills", colour = "Driver", fill = "Driver")
 
 ggsave("model_comparison/img/beta_driver.png", bg = "white", width = 12, height = 8)
 
@@ -129,13 +144,18 @@ rank_driver <-
 
 rank_driver |>
   filter(driver_name %in% drivers_focus) |>
+  ungroup() |>
+  mutate(
+    driver_name = fct_recode(driver_name, verstappen = "max_verstappen"),
+    driver_name = fct_relabel(driver_name, str_to_title)
+  ) |>
   ggplot(aes(x = season_num, y = y, ymin = ymin, ymax = ymax, colour = driver_name, fill = driver_name)) +
   geom_ribbon(alpha = .5, colour = NA) +
   geom_line() +
   geom_point() +
   theme_minimal() +
   facet_wrap(~as_factor(driver_name)) +
-  labs(title = "Rank model driver skills")
+  labs(title = "Rank model driver skills", colour = "Driver", fill = "Driver")
 
 
 ggsave("model_comparison/img/rank_driver.png", bg = "white", width = 12, height = 8)
@@ -148,6 +168,11 @@ bind_rows(
   beta_driver |> mutate(model = "beta")
 ) |>
   filter(driver_name %in% drivers_focus) |>
+  ungroup() |>
+  mutate(
+    driver_name = fct_recode(driver_name, verstappen = "max_verstappen"),
+    driver_name = fct_relabel(driver_name, str_to_title)
+  ) |>
   ggplot(aes(x = season_num, y = y, ymin = ymin, ymax = ymax, colour = model, fill = model)) +
   geom_ribbon(alpha = .35, colour = NA) +
   geom_line() +
@@ -189,13 +214,15 @@ beta_team <-
 
 beta_team |>
   filter(team_name %in% teams_focus) |>
+  ungroup() |>
+  mutate(team_name = fct_recode(team_name, !!!recode_constructors)) |>
   ggplot(aes(x = season_num, y = y, ymin = ymin, ymax = ymax, colour = team_name, fill = team_name)) +
   geom_ribbon(alpha = .5, colour = NA) +
   geom_line() +
   geom_point() +
   theme_minimal() +
   facet_wrap(~as_factor(team_name)) +
-  labs(title = "Beta model team advantage")
+  labs(title = "Beta model team advantage", fill = "Constructor", colour = "Constructor")
 
 
 ggsave("model_comparison/img/beta_team.png", bg = "white", width = 12, height = 8)
@@ -229,13 +256,15 @@ rank_team <-
 
 rank_team |>
   filter(team_name %in% teams_focus) |>
+  ungroup() |>
+  mutate(team_name = fct_recode(team_name, !!!recode_constructors)) |>
   ggplot(aes(x = season_num, y = y, ymin = ymin, ymax = ymax, colour = team_name, fill = team_name)) +
   geom_ribbon(alpha = .5, colour = NA) +
   geom_line() +
   geom_point() +
   theme_minimal() +
   facet_wrap(~as_factor(team_name)) +
-  labs(title = "Rank model team advantage")
+  labs(title = "Rank model team advantage", fill = "Constructor", colour = "Constructor")
 
 
 ggsave("model_comparison/img/rank_team.png", bg = "white", width = 12, height = 8)
@@ -246,6 +275,8 @@ bind_rows(
   beta_team |> mutate(model = "beta")
 ) |>
   filter(team_name %in% teams_focus) |>
+  ungroup() |>
+  mutate(team_name = fct_recode(team_name, !!!recode_constructors)) |>
   ggplot(aes(x = season_num, y = y, ymin = ymin, ymax = ymax, colour = model, fill = model)) +
   geom_ribbon(alpha = .35, colour = NA) +
   geom_line() +
@@ -286,6 +317,11 @@ bind_rows(
   ar_driver |> mutate(model = "auto")
 ) |>
   filter(driver_name %in% drivers_focus) |>
+  ungroup() |>
+  mutate(
+    driver_name = fct_recode(driver_name, verstappen = "max_verstappen"),
+    driver_name = fct_relabel(driver_name, str_to_title)
+  ) |>
   ggplot(aes(x = season_num, y = y, ymin = ymin, ymax = ymax, colour = model, fill = model)) +
   geom_ribbon(alpha = .35, colour = NA) +
   geom_line() +
@@ -314,6 +350,8 @@ bind_rows(
   ar_team |> mutate(model = "auto")
 ) |>
   filter(team_name %in% teams_focus) |>
+  ungroup() |>
+  mutate(team_name = fct_recode(team_name, !!!recode_constructors)) |>
   ggplot(aes(x = season_num, y = y, ymin = ymin, ymax = ymax, colour = model, fill = model)) +
   geom_ribbon(alpha = .35, colour = NA) +
   geom_line() +
@@ -356,13 +394,18 @@ slope_driver <-
 
 slope_driver |>
   filter(driver_name %in% drivers_focus) |>
+  ungroup() |>
+  mutate(
+    driver_name = fct_recode(driver_name, verstappen = "max_verstappen"),
+    driver_name = fct_relabel(driver_name, str_to_title)
+  ) |>
   ggplot(aes(x = season_num, y = y, ymin = ymin, ymax = ymax, colour = driver_name, fill = driver_name)) +
   geom_ribbon(alpha = .5, colour = NA) +
   geom_line() +
   geom_point() +
   theme_minimal() +
   facet_wrap(~as_factor(driver_name)) +
-  labs(title = "Slope model driver skills")
+  labs(title = "Slope model driver skills", colour = "Driver", fill = "Driver")
 
 ggsave("model_comparison/img/slope_driver.png", bg = "white", width = 12, height = 8)
 # giovinazzi is suddenly the best?

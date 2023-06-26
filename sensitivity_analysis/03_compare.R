@@ -22,6 +22,16 @@ drivers_focus <- c("hamilton", "bottas", "norris", "sainz", "leclerc", "max_vers
 
 teams_focus <- c("mercedes", "red_bull", "ferrari", "williams", "mclaren", "toro_rosso")
 
+recode_constructors <- c(
+  "Ferrari" = "ferrari",
+  "McLaren" = "mclaren",
+  "Mercedes" = "mercedes",
+  "Red Bull" = "red_bull",
+  "Toro Rosso" = "toro_rosso",
+  "Williams" = "williams"
+)
+
+
 
 # Driver plot ----
 # Basic_1 model (i.e., No drivers removed)
@@ -74,6 +84,11 @@ driver_data_sum <-
 
 
 driver_data_sum |>
+  ungroup() |>
+  mutate(
+    driver_name = fct_recode(driver_name, verstappen = "max_verstappen"),
+    driver_name = fct_relabel(driver_name, str_to_title)
+  ) |>
   ggplot(aes(x = season_num, y = y, ymin = ymin, ymax = ymax, colour = model, fill = model)) +
   geom_ribbon(alpha = .2, colour = NA) +
   geom_line() +
@@ -113,6 +128,10 @@ driver_data_sum %>%
     driver_name %in% drivers_2021
   ) %>%
   mutate(driver_name = factor(driver_name, levels = fct_order)) %>%
+  mutate(
+    driver_name = fct_recode(driver_name, verstappen = "max_verstappen"),
+    driver_name = fct_relabel(driver_name, str_to_title)
+  ) %>%
   ggplot(aes(y = driver_name, x = y, xmin = ymin, xmax = ymax, colour = model)) +
   geom_pointrange(position = position_dodge(width = 0.5)) +
   theme_fira() +
@@ -166,6 +185,8 @@ team_data_sum <-
 
 # direct comparison
 team_data_sum |>
+  ungroup() |>
+  mutate(team_name = fct_recode(team_name, !!!recode_constructors)) |>
   ggplot(aes(x = season_num, y = y, ymin = ymin, ymax = ymax, colour = team_name, fill = team_name)) +
   geom_ribbon(alpha = .2, colour = NA) +
   geom_line() +
