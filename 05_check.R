@@ -121,6 +121,8 @@ pp_check_plot <- function(race_year, nsim = 200) {
     group_by(driver) %>%
     summarise(pos = mean(position)) %>%
     arrange(pos) %>%
+    mutate(driver = fct_recode(driver, verstappen = "max_verstappen", schumacher = "mick_schumacher"),
+           driver = fct_relabel(driver, str_to_title)) %>%
     pull(driver) %>%
     as.character()
 
@@ -135,6 +137,8 @@ pp_check_plot <- function(race_year, nsim = 200) {
     mutate(origin = "observed")
 
   bind_rows(y, yrep) %>%
+    mutate(driver = fct_recode(driver, verstappen = "max_verstappen", schumacher = "mick_schumacher"),
+           driver = fct_relabel(driver, str_to_title)) %>%
     ggplot(aes(x = factor(position), fill = origin, group = origin)) +
     geom_bar(aes(y = after_stat(prop)), position = position_dodge(preserve = "single")) +
     facet_wrap(~factor(driver, levels = ordered_levels)) +

@@ -55,7 +55,9 @@ plt_skill_trajectory <-
   driver_skill_summary %>%
   ungroup() %>%
   filter(Driver %in% drivers_focus) %>%
-  mutate(Driver = fct_reorder(Driver, -est)) %>%
+  mutate(Driver = fct_reorder(Driver, -est),
+         Driver = fct_recode(Driver, verstappen = "max_verstappen", schumacher = "mick_schumacher"),
+         Driver = fct_relabel(Driver, str_to_title)) %>%
   ggplot(aes(x = Year, y = est, ymin = lower, ymax = upper)) +
   geom_ribbon(aes(fill = Driver), alpha = .2) +
   geom_line(aes(colour = Driver)) +
@@ -81,7 +83,9 @@ plt_driver_skill_2021 <-
   driver_skill_summary %>%
   ungroup() %>%
   filter(Year == 2021, Driver %in% drivers_2021) %>%
-  mutate(Driver = fct_reorder(Driver, est)) %>%
+  mutate(Driver = fct_reorder(Driver, est),
+         Driver = fct_recode(Driver, verstappen = "max_verstappen", schumacher = "mick_schumacher"),
+         Driver = fct_relabel(Driver, str_to_title)) %>%
   ggplot(aes(y = Driver, x = est, xmin = lower, xmax = upper)) +
   geom_pointrange(colour = firaCols[3]) +
   theme_fira() +
@@ -94,6 +98,19 @@ ggsave("img/plt_skill_2021.png", plot = plt_driver_skill_2021, width = 9, height
 
 
 # Inference about constructor advantage ----
+recode_constructors <- c(
+  "Alfa Romeo" = "alfa",
+  "Alpha Tauri" = "alphatauri",
+  "Alpine" = "alpine",
+  "Ferrari" = "ferrari",
+  "Haas" = "haas",
+  "McLaren" = "mclaren",
+  "Mercedes" = "mercedes",
+  "Aston Martin" = "aston_martin",
+  "Red Bull" = "red_bull",
+  "Williams" = "williams"
+)
+
 constructors_focus <- c("ferrari", "haas", "mclaren", "mercedes", "red_bull", "williams")
 
 constructor_mean <- fit$draws("theta_team", format = "df") %>% select(-.chain, -.iteration)
@@ -138,7 +155,8 @@ plt_advantage_trajectory <-
   constructor_advantage_summary %>%
   ungroup() %>%
   filter(Constructor %in% constructors_focus) %>%
-  mutate(Constructor = fct_relevel(Constructor, "ferrari", "mercedes", "red_bull", "mclaren", "haas", "williams")) %>%
+  mutate(Constructor = fct_relevel(Constructor, "ferrari", "mercedes", "red_bull", "mclaren", "haas", "williams"),
+         Constructor = fct_recode(Constructor, !!!recode_constructors)) %>%
   ggplot(aes(x = Year, y = est, ymin = lower, ymax = upper)) +
   geom_ribbon(aes(fill = Constructor), alpha = .2) +
   geom_line(aes(colour = Constructor)) +
@@ -156,6 +174,7 @@ ggsave("img/plt_advantage_trajectory.png", plot = plt_advantage_trajectory, widt
 constructors_2021 <- c("alfa", "alphatauri", "alpine", "ferrari", "haas", "mclaren",
                        "mercedes", "aston_martin", "red_bull", "williams")
 
+
 constructor_mean_summary <-
   constructor_mean_long %>%
   group_by(Constructor) %>%
@@ -169,7 +188,8 @@ plt_advantage_avg <-
   constructor_mean_summary %>%
   ungroup() %>%
   filter(Constructor %in% constructors_2021) %>%
-  mutate(Constructor = fct_reorder(Constructor, est)) %>%
+  mutate(Constructor = fct_reorder(Constructor, est),
+         Constructor = fct_recode(Constructor, !!!recode_constructors)) %>%
   ggplot(aes(y = Constructor, x = est, xmin = lower, xmax = upper)) +
   geom_pointrange(colour = firaCols[1]) +
   theme_fira() +
